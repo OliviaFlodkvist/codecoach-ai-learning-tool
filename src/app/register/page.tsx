@@ -15,6 +15,28 @@ export default function RegisterPage() {
 
           <form className="mx-auto mt-8 w-full md:w-[680px]">
             <div className="mx-[8%] mb-8 h-px w-[84%] bg-amber-300/40" />
+
+            <div className="px-[8%] mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-amber-200/90 mb-2 ml-0">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full rounded-full bg-neutral-200 text-neutral-900 px-6 py-3 shadow-inner focus:outline-none focus:ring-2 focus:ring-amber-300"
+                />
+              </div>
+              <div>
+                <label className="block text-amber-200/90 mb-2 ml-0">
+                  Surname
+                </label>
+                <input
+                  type="text"
+                  className="w-full rounded-full bg-neutral-200 text-neutral-900 px-6 py-3 shadow-inner focus:outline-none focus:ring-2 focus:ring-amber-300"
+                />
+              </div>
+            </div>
+
             <label className="block text-amber-200/90 mb-2 ml-[8%]">
               Email
             </label>
