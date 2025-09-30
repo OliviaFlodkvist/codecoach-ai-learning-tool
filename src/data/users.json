@@ -1,0 +1,11 @@
+[
+  {
+    "id": "mg6kk9z3",
+    "name": "My",
+    "surname": "Thernström",
+    "email": "mysan.thernstrom@gmail.com",
+    "password": "scrypt:ec1d8b0c48c717b65db538e12f173650:f444832ad8dc3f595a2827cab028fcc2e172a58302dbc13a22b42babffd7e1074f8e6e4d31a8081c1e9632246692e871b63c0a0cd784b16ee828cfb15838ada1",
+    "profession": "student",
+    "createdAt": "2025-09-30T13:04:22.945Z"
+  }
+]
