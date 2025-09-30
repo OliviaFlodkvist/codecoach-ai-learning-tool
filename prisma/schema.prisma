@@ -26,6 +26,7 @@ model Member {
   first_name      String
   last_name       String
   email           String   @unique
+  password        String
   profession      Profession
   createdAt       DateTime @default(now())
 }
