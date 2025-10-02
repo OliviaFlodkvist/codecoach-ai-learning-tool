@@ -19,7 +19,7 @@ export default function Home() {
 
         <div className="space-y-6">
           <div className="mx-auto w-72 md:w-[520px] border-t border-[#FFF08B]"></div>
-          <div className="font-orbitron text-6xl md:text-9xl font-extrabold tracking-[0.005em] text-[#FFC35B] text-stroke-yellow drop-shadow">
+          <div className="font-orbitron text-6xl md:text-9xl font-extrabold tracking-[0.005em] text-[#FFC35B] text-stroke-yellow">
             <span>&lt;CODE/&gt;</span>
           </div>
           <div className="font-orbitron text-6xl md:text-9xl font-extrabold tracking-[0.005em] text-[#FFC35B] text-stroke-yellow">
