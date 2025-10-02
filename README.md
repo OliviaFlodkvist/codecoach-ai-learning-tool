@@ -21,3 +21,9 @@ Change 'yourpassword' to something that you want.
 ```bash
 docker run --name codecoach -e POSTGRES_PASSWORD=yourpassword -p 5435:5432 -d postgres:14.5
 ```
+
+## To access database
+Run the following in your database
+```bash
+npx prisma studio
+```
