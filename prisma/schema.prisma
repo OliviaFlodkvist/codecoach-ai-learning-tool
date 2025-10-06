@@ -29,4 +29,59 @@ model Member {
   password        String
   profession      Profession
   createdAt       DateTime @default(now())
+  
+  // Relations
+  daily_sessions  DailySession[]
+}
+
+model DailySession {
+  id           Int      @id @default(autoincrement())
+  member_id    Int
+  date         DateTime @db.Date
+  summary      String?  @db.Text
+  raw_md_file  String?  @db.Text
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  member       Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  keywords     Keyword[]
+  quiz_questions QuizQuestion[]
+  
+  // Indexes for better query performance
+  @@index([member_id])
+  @@index([date])
+  @@unique([member_id, date]) // Ensure one session per member per day
+}
+
+model Keyword {
+  id                Int           @id @default(autoincrement())
+  daily_session_id  Int
+  keyword           String
+  detail_text       String        @db.Text
+  order             Int           // 1-5 to track order
+  createdAt         DateTime      @default(now())
+  
+  // Relations
+  daily_session     DailySession  @relation(fields: [daily_session_id], references: [id], onDelete: Cascade)
+  
+  // Constraints
+  @@index([daily_session_id])
+  @@unique([daily_session_id, order]) // Ensure unique order per session
+}
+
+model QuizQuestion {
+  id               Int           @id @default(autoincrement())
+  daily_session_id Int
+  question_text    String        @db.Text
+  answer           String        @db.Text
+  options          Json?         // Possible answers if multiple-choice
+  order            Int           // 1-5 to track order
+  createdAt        DateTime      @default(now())
+  
+  // Relations
+  daily_session    DailySession  @relation(fields: [daily_session_id], references: [id], onDelete: Cascade)
+  
+  // Constraints
+  @@index([daily_session_id])
+  @@unique([daily_session_id, order]) // Ensure unique order per session
 }
