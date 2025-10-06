@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
+  const router = useRouter();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -28,44 +31,69 @@ export default function UploadPage() {
     }
 
     setIsUploading(true);
+    setIsGenerating(true);
     setUploadStatus({ type: null, message: "" });
 
     try {
+      // First upload the file
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const response = await fetch("/api/upload", {
+      const uploadResponse = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
 
-      const result = await response.json();
+      const uploadResult = await uploadResponse.json();
 
-      if (response.ok) {
-        setUploadStatus({
-          type: "success",
-          message: `Successfully uploaded ${result.fileName}! Session created/updated.`,
-        });
-        // Clear the selected file after successful upload
-        setSelectedFile(null);
-        // Reset the file input
-        const fileInput = document.getElementById(
-          "file-upload"
-        ) as HTMLInputElement;
-        if (fileInput) fileInput.value = "";
-      } else {
-        setUploadStatus({
-          type: "error",
-          message: result.error || "Upload failed",
-        });
+      if (!uploadResponse.ok) {
+        throw new Error(uploadResult.error || "Upload failed");
       }
+
+      // Then generate the content
+      const generateResponse = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId: uploadResult.sessionId }),
+      });
+
+      const generateResult = await generateResponse.json();
+
+      if (!generateResponse.ok) {
+        throw new Error(generateResult.error || "Generation failed");
+      }
+
+      // Redirect to summary page
+      setUploadStatus({
+        type: "success",
+        message: `Successfully generated summary, keywords, and quiz for ${uploadResult.fileName}!`,
+      });
+
+      // Redirect to summary page after a brief delay
+      setTimeout(() => {
+        router.push(`/codecoach/summary?sessionId=${uploadResult.sessionId}`);
+      }, 1000);
+
+      // Clear the selected file after successful generation
+      setSelectedFile(null);
+      // Reset the file input
+      const fileInput = document.getElementById(
+        "file-upload"
+      ) as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
     } catch (error) {
       setUploadStatus({
         type: "error",
-        message: "Network error. Please try again.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Network error. Please try again.",
       });
     } finally {
       setIsUploading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -125,17 +153,21 @@ export default function UploadPage() {
 
             <button
               onClick={handleGenerate}
-              disabled={isUploading || !selectedFile}
+              disabled={isUploading || isGenerating || !selectedFile}
               className={`flex items-center justify-center w-36 h-14 rounded-2xl 
                 bg-gradient-to-r from-white via-gray-200 to-gray-400 text-black text-xl 
                 font-bold cursor-pointer border border-amber-200 hover:from-gray-100 hover:via-gray-300 hover:to-gray-500 transition-all duration-200
                 ${
-                  !selectedFile || isUploading
+                  !selectedFile || isUploading || isGenerating
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
             >
-              {isUploading ? "Generating..." : "Generate"}
+              {isGenerating
+                ? "Generating..."
+                : isUploading
+                ? "Uploading..."
+                : "Generate"}
             </button>
           </div>
         </div>
