@@ -37,14 +37,29 @@ export default function SummaryPage() {
 
   const fetchSummaryData = async (sessionId: string) => {
     try {
-      const response = await fetch(`/api/summary?sessionId=${sessionId}`);
+      // When using OpenAI use: const response = await fetch(`/api/summary?sessionId=${sessionId}`);
+      // In development, use generate API to get mock data
+      const isDevelopment = process.env.NODE_ENV === "development";
+      const endpoint = isDevelopment
+        ? `/api/generate`
+        : `/api/summary?sessionId=${sessionId}`;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId: parseInt(sessionId) }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch summary data");
       }
-
-      const data = await response.json();
-      setGeneratedData(data);
+      // When using Open AI use:       const data = await response.json();
+      //setGeneratedData(data);
+      //const response: Response
+      const result = await response.json();
+      setGeneratedData(result.data || result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -92,6 +107,15 @@ export default function SummaryPage() {
           <h1 className="text-5xl font-orbitron md:text-8xl font-semibold tracking-wide text-amber-200 whitespace-nowrap mb-4 text-stroke-yellow">
             Today's Summary
           </h1>
+
+          {/* Development Mode Indicator */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="mb-4">
+              <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold">
+                🚧 DEVELOPMENT MODE - Using Mock Data
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="w-full max-w-4xl mx-auto space-y-8">
