@@ -5,11 +5,11 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions = {
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt" as const },
   providers: [
     GithubProvider({
-      clientId: process.env.GITHUB_ID,
-      clientSecret: process.env.GITHUB_SECRET,
+      clientId: process.env.GITHUB_ID || "",
+      clientSecret: process.env.GITHUB_SECRET || "",
     }),
     Credentials({
       name: "Credentials",
@@ -44,4 +44,5 @@ export const authOptions = {
     },
   },
 };
+
 export default NextAuth(authOptions);
