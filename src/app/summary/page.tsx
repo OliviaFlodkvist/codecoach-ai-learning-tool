@@ -44,11 +44,11 @@ export default function SummaryPage() {
     // First, check the config to see if we should skip OpenAI
     const checkConfig = async () => {
       try {
-        const configResponse = await fetch('/api/config');
+        const configResponse = await fetch("/api/config");
         const config = await configResponse.json();
         setSkipOpenAI(config.skipOpenAI);
       } catch (error) {
-        console.error('Failed to fetch config:', error);
+        console.error("Failed to fetch config:", error);
         setSkipOpenAI(false); // Default to not skipping
       }
     };
@@ -122,12 +122,8 @@ export default function SummaryPage() {
 
   const fetchSummaryData = async (sessionId: string) => {
     try {
-      // Check if we should use mock data or real API
-      // Since we can't access server env vars on client, we'll use a different approach
-      // We'll check if we're in development mode and use that as a proxy
-      const isDevelopment = process.env.NODE_ENV === "development";
-
-      if (isDevelopment) {
+      // Use the skipOpenAI state that we fetched from the config API
+      if (skipOpenAI) {
         // Use mock data directly - no API call needed
         const mockData: GeneratedData = {
           summary: {
@@ -325,7 +321,7 @@ export default function SummaryPage() {
       </div>
 
       {/* Development Mode Indicator */}
-      {process.env.NODE_ENV === "development" && (
+      {skipOpenAI && (
         <div className="mb-4 text-center">
           <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold">
             🚧 DEVELOPMENT MODE - Using Mock Data
