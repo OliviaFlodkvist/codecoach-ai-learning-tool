@@ -22,7 +22,7 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (res?.error) setError("Invalid email or password");
-    else window.location.href = "/";
+    else window.location.href = "/codecoach";
   }
 
   return (
