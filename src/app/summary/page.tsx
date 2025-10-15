@@ -36,7 +36,7 @@ export default function SummaryPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [skipOpenAI, setSkipOpenAI] = useState<boolean>(false);
+  const [skipOpenAI, setSkipOpenAI] = useState<boolean | null>(null);
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
 
@@ -122,8 +122,13 @@ export default function SummaryPage() {
 
   const fetchSummaryData = async (sessionId: string) => {
     try {
-      // Use the skipOpenAI state that we fetched from the config API
-      if (skipOpenAI) {
+      // First, get the current config to make sure we have the latest setting
+      const configResponse = await fetch("/api/config");
+      const config = await configResponse.json();
+      const shouldSkipOpenAI = config.skipOpenAI;
+
+      // Use the config value to determine what to do
+      if (shouldSkipOpenAI) {
         // Use mock data directly - no API call needed
         const mockData: GeneratedData = {
           summary: {
@@ -321,7 +326,7 @@ export default function SummaryPage() {
       </div>
 
       {/* Development Mode Indicator */}
-      {skipOpenAI && (
+      {skipOpenAI === true && (
         <div className="mb-4 text-center">
           <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold">
             🚧 DEVELOPMENT MODE - Using Mock Data
