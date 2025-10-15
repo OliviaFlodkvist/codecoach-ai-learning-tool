@@ -40,6 +40,9 @@ export default function SummaryPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
 
+  // Debug sessionId
+  console.log("Summary page - sessionId from URL:", sessionId);
+
   useEffect(() => {
     // First, check the config to see if we should skip OpenAI
     const checkConfig = async () => {
@@ -398,9 +401,16 @@ export default function SummaryPage() {
         </p>
 
         <Link
-          href="/quiz"
+          href={sessionId ? `/quiz?sessionId=${sessionId}` : "/quiz"}
           className="inline-flex items-center justify-center px-10 py-6 md:px-12 md:py-4
-               rounded-full bg-[#174914] text-[#FFF9B6] font-michroma text-3xl"
+                rounded-full bg-[#174914] text-[#FFF9B6] font-michroma text-3xl"
+          onClick={() => {
+            console.log("Quiz button clicked, sessionId:", sessionId);
+            console.log(
+              "Quiz URL will be:",
+              sessionId ? `/quiz?sessionId=${sessionId}` : "/quiz"
+            );
+          }}
         >
           Quiz
         </Link>
