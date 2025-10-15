@@ -10,16 +10,6 @@ const anek = Anek_Gurmukhi({
 
 export default function SummaryPage() {
   return (
-    <main className="relative min-h-screen w-full flex flex-col text-amber-200">
-    {/* Background image */}
-    <Image
-      src="/bg/summary_bg.png" 
-      alt=""
-      fill
-      priority
-      sizes="100vw"
-      className="-z-10 object-cover"
-    />
     <div className="flex flex-col w-full pt-6 text-amber-200">
       {/* Title */}
       <div className="min-h-[15vh] flex justify-center items-center w-full text-center">
@@ -192,6 +182,5 @@ export default function SummaryPage() {
   </Link>
     </div>
 </div>
-</main>
   );
 }
