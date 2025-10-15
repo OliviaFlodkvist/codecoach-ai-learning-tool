@@ -73,7 +73,7 @@ export default function UploadPage() {
 
       // Redirect to summary page after a brief delay
       setTimeout(() => {
-        router.push(`/codecoach/summary?sessionId=${uploadResult.sessionId}`);
+        router.push(`/summary?sessionId=${uploadResult.sessionId}`);
       }, 1000);
 
       // Clear the selected file after successful generation

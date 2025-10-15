@@ -1,14 +1,214 @@
+"use client";
+
 import GapItem from "@/app/components/GapItem";
 import { Anek_Gurmukhi } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 const anek = Anek_Gurmukhi({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
 });
 
+interface GeneratedData {
+  summary: {
+    what_you_built: string[];
+    knowledge_gaps: {
+      title: string;
+      intro: string;
+      gap: string;
+      study: string;
+      concepts: string;
+    }[];
+  };
+  quiz: {
+    question: string;
+    options: string[];
+    answer: string;
+  }[];
+}
+
 export default function SummaryPage() {
+  const [generatedData, setGeneratedData] = useState<GeneratedData | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("sessionId");
+
+  useEffect(() => {
+    if (sessionId) {
+      fetchSummaryData(sessionId);
+    } else {
+      // Use mock data if no sessionId
+      setGeneratedData({
+        summary: {
+          what_you_built: [
+            "- Registration page with form validation",
+            "- Login page with credential verification",
+            "- Database integration using Prisma ORM",
+            "- NextAuth.js authentication flow",
+            "- Password hashing with bcrypt",
+          ],
+          knowledge_gaps: [
+            {
+              title: "1. Data Flow Understanding",
+              intro: "Understanding how data flows from UI to database",
+              gap: "Not tracking how data transforms from UI → API → Database",
+              study: "Request/response lifecycle, payload mapping",
+              concepts:
+                "When a user fills out a form, the frontend temporarily stores the data (e.g., in React state). When the form is submitted, this data is sent as an HTTP request to the backend. The backend parses and validates the data, then processes it—often by interacting with the database to create or update records. Once processing is complete, the backend sends a response back to the frontend, indicating success or failure and sometimes returning the processed data. Understanding this lifecycle helps pinpoint where issues like missing or incorrect data occur.",
+            },
+            {
+              title: "2. Module System",
+              intro: "How npm packages and modules work in Node.js",
+              gap: "How npm packages work, node_modules, dependency resolution",
+              study: "CommonJS vs ES Modules, package.json dependencies",
+              concepts:
+                "The module system in Node.js allows you to organize code into reusable pieces. npm packages are installed into node_modules and can be imported using require() or import statements. Understanding the difference between CommonJS (require/module.exports) and ES Modules (import/export) is crucial for avoiding import errors and ensuring proper dependency management.",
+            },
+            {
+              title: "3. Async/Await Pattern",
+              intro: "Asynchronous programming with promises and async/await",
+              gap: "JavaScript event loop, promise chains",
+              study: "JavaScript event loop, promise chains",
+              concepts:
+                "Async/await is syntactic sugar over promises that makes asynchronous code look synchronous. The JavaScript event loop handles the execution of code, managing the call stack, callback queue, and microtask queue. Understanding how promises work under the hood and how the event loop processes them is essential for writing efficient asynchronous code.",
+            },
+            {
+              title: "4. TypeScript Basics",
+              intro: "Type safety and static typing in JavaScript",
+              gap: "Type inference, interfaces, generics",
+              study: "Type inference, interfaces, generics",
+              concepts:
+                "TypeScript adds static type checking to JavaScript, helping catch errors at compile time. Type inference allows TypeScript to automatically determine types based on usage, while interfaces define contracts for object shapes. Generics provide a way to create reusable components that work with multiple types while maintaining type safety.",
+            },
+            {
+              title: "5. CSS Layout (Tailwind)",
+              intro: "CSS Box Model and layout fundamentals",
+              gap: "CSS Box Model, flex/grid context",
+              study:
+                "How percentage widths are calculated relative to parent containers",
+              concepts:
+                "The CSS Box Model consists of content, padding, border, and margin. Understanding how these properties interact and how percentage widths are calculated relative to parent containers is crucial for creating responsive layouts. Flexbox and Grid provide powerful layout capabilities, but understanding their context and behavior is key to avoiding layout issues.",
+            },
+          ],
+        },
+        quiz: [],
+      });
+      setLoading(false);
+    }
+  }, [sessionId]);
+
+  const fetchSummaryData = async (sessionId: string) => {
+    try {
+      // Check if we should use mock data or real API
+      const shouldSkipOpenAI = process.env.SKIP_OPENAI === "true";
+
+      if (shouldSkipOpenAI) {
+        // Use generate API for mock data
+        const response = await fetch(`/api/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sessionId: parseInt(sessionId) }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch summary data");
+        }
+        const result = await response.json();
+        setGeneratedData(result.data || result);
+      } else {
+        // Use real API for actual data
+        const response = await fetch(`/api/summary?sessionId=${sessionId}`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch summary data");
+        }
+        const data = await response.json();
+
+        // Transform old format to new format
+        const transformedData: GeneratedData = {
+          summary: {
+            what_you_built: data.summary
+              ? data.summary.split("\n").filter((line: string) => line.trim())
+              : [],
+            knowledge_gaps: data.keywords
+              ? data.keywords.map((k: any, index: number) => {
+                  // Parse the detail_text to extract gap and study info
+                  const lines = k.detail_text.split("\n");
+                  const intro = lines[0] || "";
+                  const gapLine = lines.find((line: string) =>
+                    line.startsWith("Gap: ")
+                  );
+                  const studyLine = lines.find((line: string) =>
+                    line.startsWith("Study: ")
+                  );
+                  const conceptsStart = lines.findIndex((line: string) =>
+                    line.startsWith("Concepts:")
+                  );
+                  const concepts =
+                    conceptsStart >= 0
+                      ? lines.slice(conceptsStart + 1).join("\n")
+                      : "";
+
+                  return {
+                    title: `${index + 1}. ${k.keyword}`,
+                    intro: intro,
+                    gap: gapLine ? gapLine.replace("Gap: ", "") : "",
+                    study: studyLine ? studyLine.replace("Study: ", "") : "",
+                    concepts: concepts,
+                  };
+                })
+              : [],
+          },
+          quiz: data.quiz
+            ? data.quiz.map((q: any) => ({
+                question: q.question_text,
+                options: q.options || [],
+                answer: q.answer,
+              }))
+            : [],
+        };
+
+        setGeneratedData(transformedData);
+      }
+    } catch (error) {
+      console.error("Error fetching summary data:", error);
+      setError("Failed to load summary data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col w-full pt-6 text-amber-200">
+        <div className="min-h-[15vh] flex justify-center items-center w-full text-center">
+          <p className="font-michroma lg:text-5xl text-3xl font-bold">
+            Loading...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !generatedData) {
+    return (
+      <div className="flex flex-col w-full pt-6 text-amber-200">
+        <div className="min-h-[15vh] flex justify-center items-center w-full text-center">
+          <p className="font-michroma lg:text-5xl text-3xl font-bold">
+            Error: {error}
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col w-full pt-6 text-amber-200">
       {/* Title */}
@@ -18,6 +218,15 @@ export default function SummaryPage() {
         </p>
       </div>
 
+      {/* Development Mode Indicator */}
+      {process.env.SKIP_OPENAI === "true" && (
+        <div className="mb-4 text-center">
+          <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold">
+            🚧 DEVELOPMENT MODE - Using Mock Data
+          </span>
+        </div>
+      )}
+
       {/* Summary of today*/}
       <div className="w-full max-w-[80%] md:max-w-[70%] mx-auto px-6 md:px-10">
         <div className="text-left space-y-5">
@@ -26,161 +235,69 @@ export default function SummaryPage() {
           </p>
 
           <div className={anek.className}>
-            <p className="text-base leading-relaxed lg:whitespace-nowrap whitespace-normal max-w-md">
-              You created a full-stack authentication system for{" "}
-              "CodeCoach" with:
-            </p>
             <ul className="list-disc pl-6 text-base leading-relaxed mt-4">
-              <li>Registration page with form validation</li>
-              <li>Login page with credential verification</li>
-              <li>Database integration using Prisma ORM</li>
-              <li>NextAuth.js authentication flow</li>
-              <li>Password hashing with bcrypt</li>
+              {generatedData.summary.what_you_built.map((item, index) => (
+                <li key={index}>{item.replace(/^- /, "")}</li>
+              ))}
             </ul>
           </div>
-        {/* Dropdown keywords*/}
+          {/* Dropdown keywords*/}
           <p className="font-michroma text-2xl md:text-3xl font-bold mt-15">
             Knowledge Gaps:
           </p>
 
           <div className="mt-3 space-y-3">
-            <GapItem 
-                number="1."
-                title="Data Flow Understanding"
-                titleClassName="text-[#FF9D00]"
-                preview={
+            {generatedData.summary.knowledge_gaps.map((gap, index) => {
+              const colors = [
+                "text-[#FF9D00]",
+                "text-[#FFFB00]",
+                "text-[#BFFF00]",
+                "text-[#58EC4B]",
+                "text-[#1CEF8D]",
+              ];
+              const color = colors[index] || "text-[#FF9D00]";
+
+              return (
+                <GapItem
+                  key={index}
+                  number={`${index + 1}.`}
+                  title={gap.title}
+                  titleClassName={color}
+                  preview={
                     <>
-                    <p className="ml-4">You struggled with why first_name/last_name weren’t saving.</p>
-                    <p className="ml-4"><strong>Gap:</strong> Not tracking how data transforms UI → API → DB</p>
-                    <p className="ml-4"><strong>Study:</strong> Request/response lifecycle, payload mapping</p>
+                      <p className="ml-4">{gap.intro}</p>
+                      <p className="ml-4">
+                        <strong>Gap:</strong> {gap.gap}
+                      </p>
+                      <p className="ml-4">
+                        <strong>Study:</strong> {gap.study}
+                      </p>
                     </>
-                }
+                  }
                 >
-              <p className= "text-[#FF9D00] ml-4 mt-4">
-                <strong>Request / response lifecycle</strong>
-              </p>
-              <p className= "ml-4 mb-6 ">
-              When a user fills out a form, the frontend temporarily stores the data (e.g., in React state). When the form is submitted, this data is sent as an HTTP request to the backend. The backend parses and validates the data, then processes it—often by interacting with the database to create or update records. Once processing is complete, the backend sends a response back to the frontend, indicating success or failure and sometimes returning the processed data. Understanding this lifecycle helps pinpoint where issues like missing or incorrect data occur.
-              </p>
-              <p className= "text-[#FF9D00] ml-4 mt-4">
-                <strong>Payload Mapping</strong>
-              </p>
-              <p className= "ml-4">
-              Payload mapping is the process of matching frontend data to the correct backend variables and database columns. For example, a frontend field labeled “name” must correspond to a backend field like “first_name.” If names or structures don’t match, the data can fail to save or be stored incorrectly. Proper payload mapping ensures that every piece of data flows correctly from the UI through the API and into the database, preventing bugs and data loss.
-              </p>
-            </GapItem>
-            <GapItem 
-                number="2."
-                title="Module System"
-                titleClassName="text-[#FFFB00]"
-                preview={
-                    <>
-                    <p className="mb-1"> Confusion about bcryptjs import errors</p>
-                    <p><strong>Gap:</strong> How npm packages work, node_modules, dependency resolution</p>
-                    <p className="mb-0"><strong>Study:</strong> CommonJS vs ES Modules, package.json dependencies</p>
-                    </>
-                }>
-              <p className= "text-[#FFFB00] ml-4 mt-4">
-                <strong>Request / response lifecycle</strong>
-              </p>
-              <p className= "ml-4 mb-6">
-              When a user fills out a form, the frontend temporarily stores the data (e.g., in React state). When the form is submitted, this data is sent as an HTTP request to the backend. The backend parses and validates the data, then processes it—often by interacting with the database to create or update records. Once processing is complete, the backend sends a response back to the frontend, indicating success or failure and sometimes returning the processed data. Understanding this lifecycle helps pinpoint where issues like missing or incorrect data occur.
-              </p>
-              <p className= "text-[#FFFB00] ml-4 mt-4">
-                <strong>Payload Mapping</strong>
-              </p>
-              <p className= "ml-4">
-              Payload mapping is the process of matching frontend data to the correct backend variables and database columns. For example, a frontend field labeled “name” must correspond to a backend field like “first_name.” If names or structures don’t match, the data can fail to save or be stored incorrectly. Proper payload mapping ensures that every piece of data flows correctly from the UI through the API and into the database, preventing bugs and data loss.
-              </p>
-            </GapItem>
-            <GapItem 
-            number="3."
-            title="Async/Await Pattern" 
-            titleClassName="text-[#BFFF00]"
-            preview={
-                <>
-                <p> You used it correctly but may not fully understand promises.</p>
-                <p><strong>Gap:</strong> </p>
-                <p className="mb-0"><strong>Study:</strong> JavaScript event loop, promise chains</p>
-                </>
-            }>
-              <p className= "text-[#BFFF00] ml-4 mt-4">
-                <strong>Request / response lifecycle</strong>
-              </p>
-              <p className= "ml-4 mb-6">
-              When a user fills out a form, the frontend temporarily stores the data (e.g., in React state). When the form is submitted, this data is sent as an HTTP request to the backend. The backend parses and validates the data, then processes it—often by interacting with the database to create or update records. Once processing is complete, the backend sends a response back to the frontend, indicating success or failure and sometimes returning the processed data. Understanding this lifecycle helps pinpoint where issues like missing or incorrect data occur.
-              </p>
-              <p className= "text-[#BFFF00] ml-4 mt-4">
-                <strong>Payload Mapping</strong>
-              </p>
-              <p className= "ml-4">
-              Payload mapping is the process of matching frontend data to the correct backend variables and database columns. For example, a frontend field labeled “name” must correspond to a backend field like “first_name.” If names or structures don’t match, the data can fail to save or be stored incorrectly. Proper payload mapping ensures that every piece of data flows correctly from the UI through the API and into the database, preventing bugs and data loss.
-              </p>
-            </GapItem>
-            <GapItem 
-            number="4."
-            title="TypeScript Basics" 
-            titleClassName="text-[#58EC4B]"
-            preview={
-                <>
-                <p className="mb-1"> Using types but relying on any and implicit types</p>
-                <p><strong>Gap:</strong> </p>
-                <p className="mb-0"><strong>Study:</strong> Type inference, interfaces, generics</p>
-                </>
-            }>
-              <p className= "text-[#58EC4B] ml-4 mt-4">
-                <strong>Request / response lifecycle</strong>
-              </p>
-              <p className= "ml-4 mb-6">
-              When a user fills out a form, the frontend temporarily stores the data (e.g., in React state). When the form is submitted, this data is sent as an HTTP request to the backend. The backend parses and validates the data, then processes it—often by interacting with the database to create or update records. Once processing is complete, the backend sends a response back to the frontend, indicating success or failure and sometimes returning the processed data. Understanding this lifecycle helps pinpoint where issues like missing or incorrect data occur.
-              </p>
-              <p className= "text-[#58EC4B] ml-4 mt-4">
-                <strong>Payload Mapping</strong>
-              </p>
-              <p className= "ml-4">
-              Payload mapping is the process of matching frontend data to the correct backend variables and database columns. For example, a frontend field labeled “name” must correspond to a backend field like “first_name.” If names or structures don’t match, the data can fail to save or be stored incorrectly. Proper payload mapping ensures that every piece of data flows correctly from the UI through the API and into the database, preventing bugs and data loss.
-              </p>
-            </GapItem>
-            <GapItem 
-            number="5. "
-            title="CSS Layout (Tailwind)" 
-            titleClassName="text-[#1CEF8D]"
-            preview={
-                <>
-                <p className="mb-1"> Needed multiple attempts for symmetric divider lines</p>
-                <p><strong>Gap:</strong>CSS Box Model, flex/grid context</p>
-                <p className="mb-0"><strong>Study:</strong> How percentage widths are calculated relative to parent containers</p>
-                </>
-            }>
-              <p className= "text-[#1CEF8D] ml-4 mt-4">
-                <strong>Request / response lifecycle</strong>
-              </p>
-              <p className= "ml-4 mb-6">
-              When a user fills out a form, the frontend temporarily stores the data (e.g., in React state). When the form is submitted, this data is sent as an HTTP request to the backend. The backend parses and validates the data, then processes it—often by interacting with the database to create or update records. Once processing is complete, the backend sends a response back to the frontend, indicating success or failure and sometimes returning the processed data. Understanding this lifecycle helps pinpoint where issues like missing or incorrect data occur.
-              </p>
-              <p className= "text-[#1CEF8D] ml-4 mt-4">
-                <strong>Payload Mapping</strong>
-              </p>
-              <p className= "ml-4">
-              Payload mapping is the process of matching frontend data to the correct backend variables and database columns. For example, a frontend field labeled “name” must correspond to a backend field like “first_name.” If names or structures don’t match, the data can fail to save or be stored incorrectly. Proper payload mapping ensures that every piece of data flows correctly from the UI through the API and into the database, preventing bugs and data loss.
-              </p>
-            </GapItem>
+                  <div className={`${color} ml-4 mt-4`}>
+                    <p className="font-bold">Concepts</p>
+                    <p className="ml-0 mb-6">{gap.concepts}</p>
+                  </div>
+                </GapItem>
+              );
+            })}
           </div>
         </div>
       </div>
       <div className="min-h-[20vh] w-full flex flex-col items-center justify-center text-center gap-8">
-  <p className="font-michroma lg:text-4xl text-2xl font-bold mb-4">
-    Are you ready to test your skills with a quiz?
-  </p>
+        <p className="font-michroma lg:text-4xl text-2xl font-bold mb-4">
+          Are you ready to test your skills with a quiz?
+        </p>
 
-  <Link
-    href="/quiz"
-    className="inline-flex items-center justify-center px-10 py-6 md:px-12 md:py-4
+        <Link
+          href="/quiz"
+          className="inline-flex items-center justify-center px-10 py-6 md:px-12 md:py-4
                rounded-full bg-[#174914] text-[#FFF9B6] font-michroma text-3xl"
-  >
-    Quiz
-  </Link>
+        >
+          Quiz
+        </Link>
+      </div>
     </div>
-</div>
   );
 }
