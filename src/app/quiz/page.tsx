@@ -24,6 +24,8 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [done, setDone] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<string[]>([]);
+  const [correctAnswers, setCorrectAnswers] = useState<number[]>([]);
 
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
@@ -288,6 +290,48 @@ export default function QuizPage() {
 
     const chosenLetter = q.options[idx][0] as "A" | "B" | "C";
     if (chosenLetter === q.answer) setScore((s) => s + 1);
+
+    // Store user's answer
+    const newUserAnswers = [...userAnswers, chosenLetter];
+    setUserAnswers(newUserAnswers);
+
+    // Track correct answers
+    if (chosenLetter === q.answer) {
+      setCorrectAnswers([...correctAnswers, current]);
+    }
+  };
+
+  const saveQuizResult = async () => {
+    if (!currentSessionId || !quizData) return;
+
+    try {
+      const percentage = (score / quizData.quiz.length) * 100;
+
+      const response = await fetch("/api/quiz-results", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionId: parseInt(currentSessionId),
+          score,
+          percentage,
+          totalQuestions: quizData.quiz.length,
+          correctAnswers,
+          userAnswers,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save quiz result");
+      }
+
+      const result = await response.json();
+      console.log("Quiz result saved:", result);
+    } catch (error) {
+      console.error("Error saving quiz result:", error);
+      // Don't show error to user as this is not critical for the quiz experience
+    }
   };
 
   const handleNext = () => {
@@ -296,6 +340,10 @@ export default function QuizPage() {
       setSelectedIdx(null);
     } else {
       setDone(true);
+      // Save the quiz result when completed
+      setTimeout(() => {
+        saveQuizResult();
+      }, 100);
     }
   };
 
@@ -304,6 +352,8 @@ export default function QuizPage() {
     setScore(0);
     setSelectedIdx(null);
     setDone(false);
+    setUserAnswers([]);
+    setCorrectAnswers([]);
   };
 
   return (
