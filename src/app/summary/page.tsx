@@ -36,13 +36,30 @@ export default function SummaryPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [skipOpenAI, setSkipOpenAI] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
 
   useEffect(() => {
-    if (sessionId) {
+    // First, check the config to see if we should skip OpenAI
+    const checkConfig = async () => {
+      try {
+        const configResponse = await fetch('/api/config');
+        const config = await configResponse.json();
+        setSkipOpenAI(config.skipOpenAI);
+      } catch (error) {
+        console.error('Failed to fetch config:', error);
+        setSkipOpenAI(false); // Default to not skipping
+      }
+    };
+
+    checkConfig();
+  }, []);
+
+  useEffect(() => {
+    if (sessionId && skipOpenAI !== null) {
       fetchSummaryData(sessionId);
-    } else {
+    } else if (!sessionId) {
       // Use mock data if no sessionId
       setGeneratedData({
         summary: {
@@ -101,28 +118,117 @@ export default function SummaryPage() {
       });
       setLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, skipOpenAI]);
 
   const fetchSummaryData = async (sessionId: string) => {
     try {
       // Check if we should use mock data or real API
-      const shouldSkipOpenAI = process.env.SKIP_OPENAI === "true";
+      // Since we can't access server env vars on client, we'll use a different approach
+      // We'll check if we're in development mode and use that as a proxy
+      const isDevelopment = process.env.NODE_ENV === "development";
 
-      if (shouldSkipOpenAI) {
-        // Use generate API for mock data
-        const response = await fetch(`/api/generate`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+      if (isDevelopment) {
+        // Use mock data directly - no API call needed
+        const mockData: GeneratedData = {
+          summary: {
+            what_you_built: [
+              "- Registration page with form validation",
+              "- Login page with credential verification",
+              "- Database integration using Prisma ORM",
+              "- NextAuth.js authentication flow",
+              "- Password hashing with bcrypt",
+            ],
+            knowledge_gaps: [
+              {
+                title: "1. Data Flow Understanding",
+                intro: "Understanding how data flows from UI to database",
+                gap: "Not tracking how data transforms from UI → API → Database",
+                study: "Request/response lifecycle, payload mapping",
+                concepts:
+                  "When a user fills out a form, the frontend temporarily stores the data (e.g., in React state). When the form is submitted, this data is sent as an HTTP request to the backend. The backend parses and validates the data, then processes it—often by interacting with the database to create or update records. Once processing is complete, the backend sends a response back to the frontend, indicating success or failure and sometimes returning the processed data. Understanding this lifecycle helps pinpoint where issues like missing or incorrect data occur.",
+              },
+              {
+                title: "2. Module System",
+                intro: "How npm packages and modules work in Node.js",
+                gap: "How npm packages work, node_modules, dependency resolution",
+                study: "CommonJS vs ES Modules, package.json dependencies",
+                concepts:
+                  "The module system in Node.js allows you to organize code into reusable pieces. npm packages are installed into node_modules and can be imported using require() or import statements. Understanding the difference between CommonJS (require/module.exports) and ES Modules (import/export) is crucial for avoiding import errors and ensuring proper dependency management.",
+              },
+              {
+                title: "3. Async/Await Pattern",
+                intro: "Asynchronous programming with promises and async/await",
+                gap: "JavaScript event loop, promise chains",
+                study: "JavaScript event loop, promise chains",
+                concepts:
+                  "Async/await is syntactic sugar over promises that makes asynchronous code look synchronous. The JavaScript event loop handles the execution of code, managing the call stack, callback queue, and microtask queue. Understanding how promises work under the hood and how the event loop processes them is essential for writing efficient asynchronous code.",
+              },
+              {
+                title: "4. TypeScript Basics",
+                intro: "Type safety and static typing in JavaScript",
+                gap: "Type inference, interfaces, generics",
+                study: "Type inference, interfaces, generics",
+                concepts:
+                  "TypeScript adds static type checking to JavaScript, helping catch errors at compile time. Type inference allows TypeScript to automatically determine types based on usage, while interfaces define contracts for object shapes. Generics provide a way to create reusable components that work with multiple types while maintaining type safety.",
+              },
+              {
+                title: "5. CSS Layout (Tailwind)",
+                intro: "CSS Box Model and layout fundamentals",
+                gap: "CSS Box Model, flex/grid context",
+                study:
+                  "How percentage widths are calculated relative to parent containers",
+                concepts:
+                  "The CSS Box Model consists of content, padding, border, and margin. Understanding how these properties interact and how percentage widths are calculated relative to parent containers is crucial for creating responsive layouts. Flexbox and Grid provide powerful layout capabilities, but understanding their context and behavior is key to avoiding layout issues.",
+              },
+            ],
           },
-          body: JSON.stringify({ sessionId: parseInt(sessionId) }),
-        });
+          quiz: [
+            {
+              question: "What is the purpose of NextAuth.js in authentication?",
+              options: [
+                "Database management",
+                "Handles authentication flows and session management",
+                "CSS styling",
+              ],
+              answer: "B",
+            },
+            {
+              question: "Which Prisma method is used to find a unique record?",
+              options: ["findFirst", "findUnique", "findMany"],
+              answer: "B",
+            },
+            {
+              question: "What does bcryptjs do?",
+              options: [
+                "Validates forms",
+                "Hashes passwords securely",
+                "Creates databases",
+              ],
+              answer: "B",
+            },
+            {
+              question:
+                "In Next.js, what is the purpose of 'use client' directive?",
+              options: [
+                "Server-side rendering",
+                "Makes a component run on the client side",
+                "Database queries",
+              ],
+              answer: "B",
+            },
+            {
+              question: "What is the main benefit of using TypeScript?",
+              options: [
+                "Faster execution",
+                "Type safety and better developer experience",
+                "Smaller bundle size",
+              ],
+              answer: "B",
+            },
+          ],
+        };
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch summary data");
-        }
-        const result = await response.json();
-        setGeneratedData(result.data || result);
+        setGeneratedData(mockData);
       } else {
         // Use real API for actual data
         const response = await fetch(`/api/summary?sessionId=${sessionId}`);
@@ -219,7 +325,7 @@ export default function SummaryPage() {
       </div>
 
       {/* Development Mode Indicator */}
-      {process.env.SKIP_OPENAI === "true" && (
+      {process.env.NODE_ENV === "development" && (
         <div className="mb-4 text-center">
           <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold">
             🚧 DEVELOPMENT MODE - Using Mock Data

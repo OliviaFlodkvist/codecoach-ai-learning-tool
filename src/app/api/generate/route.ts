@@ -34,15 +34,38 @@ export async function POST(req: NextRequest) {
       });
 
       if (existingSession?.summary) {
-        // Use existing generated data
+        // Use existing generated data - transform to new format
         data = {
-          summary: existingSession.summary,
-          keywords: existingSession.keywords.map((k) => ({
-            keyword: k.keyword,
-            detail_text: k.detail_text,
-          })),
+          summary: {
+            what_you_built: existingSession.summary
+              .split("\n")
+              .filter((line) => line.trim()),
+            knowledge_gaps: existingSession.keywords.map((k, index) => {
+              const lines = k.detail_text.split("\n");
+              const intro = lines[0] || "";
+              const gapLine = lines.find((line) => line.startsWith("Gap: "));
+              const studyLine = lines.find((line) =>
+                line.startsWith("Study: ")
+              );
+              const conceptsStart = lines.findIndex((line) =>
+                line.startsWith("Concepts:")
+              );
+              const concepts =
+                conceptsStart >= 0
+                  ? lines.slice(conceptsStart + 1).join("\n")
+                  : "";
+
+              return {
+                title: `${index + 1}. ${k.keyword}`,
+                intro: intro,
+                gap: gapLine ? gapLine.replace("Gap: ", "") : "",
+                study: studyLine ? studyLine.replace("Study: ", "") : "",
+                concepts: concepts,
+              };
+            }),
+          },
           quiz: existingSession.quiz_questions.map((q) => ({
-            question_text: q.question_text,
+            question: q.question_text,
             answer: q.answer,
             options: q.options as string[] | null,
           })),
