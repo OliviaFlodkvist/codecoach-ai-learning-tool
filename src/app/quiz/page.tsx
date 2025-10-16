@@ -163,19 +163,19 @@ export default function QuizPage() {
       const transformedData: QuizData = {
         quiz: data.quiz
           ? data.quiz.map((q: any) => {
-              console.log("Processing quiz question:", q);
-              return {
-                question: q.question_text,
-                type: "multiple_choice" as const,
-                options: q.options
-                  ? q.options.map(
-                      (option: string, index: number) =>
-                        `${String.fromCharCode(65 + index)}. ${option}`
-                    )
-                  : [],
-                answer: q.answer as "A" | "B" | "C",
-              };
-            })
+            console.log("Processing quiz question:", q);
+            return {
+              question: q.question_text,
+              type: "multiple_choice" as const,
+              options: q.options
+                ? q.options.map(
+                  (option: string, index: number) =>
+                    `${String.fromCharCode(65 + index)}. ${option}`
+                )
+                : [],
+              answer: q.answer as "A" | "B" | "C",
+            };
+          })
           : [],
       };
 
@@ -201,7 +201,7 @@ export default function QuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-orange-500 via-orange-600 to-black flex justify-center items-center text-center text-yellow-200 font-orbitron">
+      <div className="min-h-screen w-full flex justify-center items-center text-center text-yellow-200 font-michroma">
         <div className="text-4xl">Loading Quiz...</div>
       </div>
     );
@@ -209,7 +209,7 @@ export default function QuizPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-orange-500 via-orange-600 to-black flex justify-center items-center text-center text-yellow-200 font-orbitron">
+      <div className="min-h-screen w-full flex justify-center items-center text-center text-yellow-200 font-michroma">
         <div className="flex flex-col gap-4">
           <div className="text-2xl">Error: {error}</div>
           <Link
@@ -230,7 +230,7 @@ export default function QuizPage() {
   // Show available sessions if no sessionId provided
   if (!sessionId && !loading && availableSessions.length > 0) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-orange-500 via-orange-600 to-black flex justify-center items-center text-center text-yellow-200 font-orbitron">
+      <div className="min-h-screen w-full to-black flex justify-center items-center text-center text-yellow-200 font-michroma">
         <div className="flex flex-col gap-8">
           <div className="text-6xl">QUIZ</div>
           <div className="text-xl">Select a session to take the quiz:</div>
@@ -264,7 +264,7 @@ export default function QuizPage() {
 
   if (!quizData) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-orange-500 via-orange-600 to-black flex justify-center items-center text-center text-yellow-200 font-orbitron">
+      <div className="min-h-screen w-full to-black flex justify-center items-center text-center text-yellow-200 font-michroma">
         <div className="flex flex-col gap-4">
           <div className="text-2xl">No quiz data available</div>
           <Link
@@ -357,9 +357,9 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-orange-500 via-orange-600 to-black flex justify-center items-center text-center text-yellow-200 font-orbitron">
+    <div className="min-h-screen w-full to-black flex justify-center items-center text-center text-yellow-200 font-michroma">
       <div className="flex flex-col gap-16">
-        <div className="font-normal text-8xl">QUIZ</div>
+        <div className="font-michroma text-8xl">QUIZ</div>
 
         {!done ? (
           <>
@@ -373,10 +373,10 @@ export default function QuizPage() {
                   selectedIdx === null
                     ? "bg-yellow-200/20"
                     : chosen
-                    ? isCorrect
-                      ? "bg-green-600"
-                      : "bg-red-600"
-                    : "bg-yellow-200/20";
+                      ? isCorrect
+                        ? "bg-green-600"
+                        : "bg-red-600"
+                      : "bg-yellow-200/20";
 
                 return (
                   <button
@@ -393,7 +393,7 @@ export default function QuizPage() {
 
             <div className="flex flex-col gap-4 items-center">
               <button
-                className="border border-yellow-200 rounded-xl bg-yellow-400 text-yellow-100 w-64 h-12 cursor-pointer"
+                className="border border-yellow-200 rounded-xl font-semibold bg-yellow-600 text-white-400 w-64 h-12 cursor-pointer border border-yellow-300"
                 onClick={handleNext}
               >
                 next
@@ -413,8 +413,38 @@ export default function QuizPage() {
         ) : (
           <>
             <div className="">
-              You got {score} out of {quizData.quiz.length}.
+
+              <div className="text-2xl">You got</div>
+              <div className="text-6xl font-michroma mt-12">
+                {score} out of {quizData.quiz.length}
+              </div>
             </div>
+
+            {(() => {
+                const percentage = (score / quizData.quiz.length) * 100;
+
+                if (percentage > 80) {
+                  return (
+                    <div className="text-2xl font-michroma">
+                      Excellent work!
+                    </div>
+                  );
+                } else if (percentage >= 50) {
+                  return (
+                    <div className="text-2xl font-michroma">
+                      Good work!
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="text-2xl font-michroma">
+                      A bit more practice and you’ll nail it!
+                    </div>
+                  );
+                }
+              })()}
+
+
             <div className="flex flex-col gap-4 items-center">
               <Link
                 href={
