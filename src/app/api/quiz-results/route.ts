@@ -75,20 +75,22 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get quiz results for the session
-    const quizResults = await prisma.quizResult.findMany({
-      where: {
-        daily_session_id: parseInt(sessionId),
-        daily_session: {
-          member_id: userId,
+    if (sessionId) {
+      // Get quiz results for a specific session
+      const quizResults = await prisma.quizResult.findMany({
+        where: {
+          daily_session_id: parseInt(sessionId),
+          daily_session: {
+            member_id: userId,
+          },
         },
-      },
-      orderBy: {
-        completed_at: "desc",
-      },
-    });
+        orderBy: {
+          completed_at: "desc",
+        },
+      });
 
-    return NextResponse.json({ results: quizResults });
+      return NextResponse.json({ results: quizResults });
+    }
   } catch (error: any) {
     console.error("Error fetching quiz results:", error);
     return NextResponse.json(
