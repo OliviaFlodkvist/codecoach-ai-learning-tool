@@ -46,6 +46,7 @@ model DailySession {
   member       Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
   keywords     Keyword[]
   quiz_questions QuizQuestion[]
+  quiz_results QuizResult[]
   
   // Indexes for better query performance
   @@index([member_id])
@@ -84,4 +85,22 @@ model QuizQuestion {
   // Constraints
   @@index([daily_session_id])
   @@unique([daily_session_id, order]) // Ensure unique order per session
+}
+
+model QuizResult {
+  id               Int           @id @default(autoincrement())
+  daily_session_id Int
+  score            Int           // Number of correct answers (0-5)
+  percentage       Float         // Score as percentage (0.0-100.0)
+  total_questions  Int           // Total number of questions (usually 5)
+  correct_answers  Json          // Array of question orders that were answered correctly
+  user_answers     Json          // Array of user's selected answers for each question
+  completed_at     DateTime      @default(now())
+  
+  // Relations
+  daily_session    DailySession  @relation(fields: [daily_session_id], references: [id], onDelete: Cascade)
+  
+  // Constraints
+  @@index([daily_session_id])
+  @@index([completed_at])
 }
