@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import ProgressRing from "../components/ProgressRing";
 
 type Question = {
   question: string;
@@ -163,19 +164,19 @@ export default function QuizPage() {
       const transformedData: QuizData = {
         quiz: data.quiz
           ? data.quiz.map((q: any) => {
-            console.log("Processing quiz question:", q);
-            return {
-              question: q.question_text,
-              type: "multiple_choice" as const,
-              options: q.options
-                ? q.options.map(
-                  (option: string, index: number) =>
-                    `${String.fromCharCode(65 + index)}. ${option}`
-                )
-                : [],
-              answer: q.answer as "A" | "B" | "C",
-            };
-          })
+              console.log("Processing quiz question:", q);
+              return {
+                question: q.question_text,
+                type: "multiple_choice" as const,
+                options: q.options
+                  ? q.options.map(
+                      (option: string, index: number) =>
+                        `${String.fromCharCode(65 + index)}. ${option}`
+                    )
+                  : [],
+                answer: q.answer as "A" | "B" | "C",
+              };
+            })
           : [],
       };
 
@@ -297,7 +298,7 @@ export default function QuizPage() {
 
     // Track correct answers
     if (chosenLetter === q.answer) {
-      setCorrectAnswers([...correctAnswers, current]);
+      setCorrectAnswers([...correctAnswers, current + 1]);
     }
   };
 
@@ -359,8 +360,6 @@ export default function QuizPage() {
   return (
     <div className="min-h-screen w-full to-black flex justify-center items-center text-center text-yellow-200 font-michroma">
       <div className="flex flex-col gap-16">
-        <div className="font-michroma text-8xl">QUIZ</div>
-
         {!done ? (
           <>
             <div className="text-2xl">{q.question}</div>
@@ -373,10 +372,10 @@ export default function QuizPage() {
                   selectedIdx === null
                     ? "bg-yellow-200/20"
                     : chosen
-                      ? isCorrect
-                        ? "bg-green-600"
-                        : "bg-red-600"
-                      : "bg-yellow-200/20";
+                    ? isCorrect
+                      ? "bg-green-600"
+                      : "bg-red-600"
+                    : "bg-yellow-200/20";
 
                 return (
                   <button
@@ -412,49 +411,61 @@ export default function QuizPage() {
           </>
         ) : (
           <>
-            <div className="">
-
-              <div className="text-2xl">You got</div>
-              <div className="text-6xl font-michroma mt-12">
-                {score} out of {quizData.quiz.length}
-              </div>
+            <div className="font-michroma text-5xl text-[#FFF08B] mt-20">
+              RESULTS
+            </div>
+            {/* TODAYS SCORE */}
+            <div className="font-michroma text-xl text-[#FFF08B] -mt-6">
+              TODAYS SCORE
             </div>
 
-            {(() => {
-                const percentage = (score / quizData.quiz.length) * 100;
+            {/* Progress Ring */}
+            <div className="flex justify-center -mt-8">
+              <ProgressRing
+                size={180}
+                strokeWidth={12}
+                percent={(score / quizData.quiz.length) * 100}
+                trackColor="#E2C3A3"
+                delayMs={1000}
+                autoColor={true}
+                lightText={true}
+              />
+            </div>
 
-                if (percentage > 80) {
-                  return (
-                    <div className="text-2xl font-michroma">
-                      Excellent work!
-                    </div>
-                  );
-                } else if (percentage >= 50) {
-                  return (
-                    <div className="text-2xl font-michroma">
-                      Good work!
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div className="text-2xl font-michroma">
-                      A bit more practice and you’ll nail it!
-                    </div>
-                  );
-                }
-              })()}
+            {/* Correct Answers */}
+            <div className="font-michroma text-xl text-[#FFF08B] mb-4 -mt-8">
+              Correct Answers:
+            </div>
 
+            {/* Answer indicators */}
+            <div className="flex gap-6 justify-center -mt-16">
+              {Array.from({ length: quizData.quiz.length }, (_, i) => {
+                const isCorrect = correctAnswers.includes(i + 1);
+                return (
+                  <div
+                    key={i}
+                    className={`font-michroma text-2xl font-bold ${
+                      isCorrect ? "text-[#59DD45]" : "text-[#EC4220]"
+                    }`}
+                  >
+                    {i + 1}
+                  </div>
+                );
+              })}
+            </div>
 
-            <div className="flex flex-col gap-4 items-center">
+            {/* Call to action */}
+            <div className="font-michroma text-l text-[#FFF08B] text-center -mt-4">
+              Go to profile to see your learning journey
+            </div>
+
+            {/* Go to Profile button */}
+            <div className="flex justify-center -mt-8">
               <Link
-                href={
-                  currentSessionId
-                    ? `/summary?sessionId=${currentSessionId}`
-                    : "/summary"
-                }
-                className="text-yellow-200 hover:text-white"
+                href="/profile"
+                className="bg-[#174914] text-[#FFF08B] font-michroma px-10 py-3 rounded-full hover:opacity-80 transition-opacity"
               >
-                ← Back to Summary
+                Go to Profile
               </Link>
             </div>
           </>

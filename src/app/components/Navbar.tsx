@@ -25,6 +25,14 @@ export default function Navbar() {
         <div className="flex items-center gap-8">
           {status === "authenticated" && (
             <Link
+              href="/profile"
+              className="font-michroma text-sm sm:text-base text-[#FFF08B] hover:text-[#FFC35B] transition-colors"
+            >
+              Profile
+            </Link>
+          )}
+          {status === "authenticated" && (
+            <Link
               href="/codecoach"
               className="font-michroma text-sm sm:text-base text-[#FFF08B] hover:text-[#FFC35B] transition-colors"
             >
@@ -62,4 +70,3 @@ export default function Navbar() {
     </nav>
   );
 }
-
