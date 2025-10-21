@@ -340,7 +340,8 @@ export default function SummaryPage() {
       {/* Summary of today*/}
       <div className="w-full max-w-[80%] md:max-w-[70%] mx-auto px-6 md:px-10">
         <div className="text-left space-y-5">
-          <p className="font-michroma lg:text-2xl text-xl font-bold">
+
+          <p className="font-michroma text-2xl md:text-xl font-bold">
             What you have built:
           </p>
 
@@ -352,7 +353,7 @@ export default function SummaryPage() {
             </ul>
           </div>
           {/* Dropdown keywords*/}
-          <p className="font-michroma lg:text-2xl text-xl font-bold mt-15">
+          <p className="font-michroma text-2xl md:text-xl font-bold mt-15">
             Knowledge Gaps:
           </p>
 
@@ -375,7 +376,7 @@ export default function SummaryPage() {
                   titleClassName={color}
                   preview={
                     <>
-                      <p className="ml-4">{gap.intro}</p>
+                      <p className="ml-4 font-bold">{gap.intro}</p>
                       <p className="ml-4">
                         <strong>Gap:</strong> {gap.gap}
                       </p>
@@ -386,8 +387,8 @@ export default function SummaryPage() {
                   }
                 >
                   <div className={`${color} ml-4 mt-4`}>
-                    <p className="font-bold">Concepts</p>
-                    <p className="ml-0 mb-6">{gap.concepts}</p>
+                    <p className="font-bold text-amber-200">Concepts</p>
+                    <p className="ml-0 mb-6 text-amber-200">{gap.concepts}</p>
                   </div>
                 </GapItem>
               );
@@ -395,16 +396,16 @@ export default function SummaryPage() {
           </div>
         </div>
       </div>
-      <div className="min-h-[20vh] w-full flex flex-col items-center justify-center text-center gap-6 mt-5">
-        <p className="font-michroma lg:text-2xl text-xl font-bold mb-2">
+      <div className="min-h-[20vh] w-full flex flex-col items-center justify-center text-center gap-4 mt-8">
+        <p className="font-michroma text-2xl md:text-xl font-bold">
           Are you ready to test your skills with a quiz?
         </p>
 
         <Link
 
           href={sessionId ? `/quiz?sessionId=${sessionId}` : "/quiz"}
-          className="inline-flex items-center justify-center px-10 py-6 md:px-12 md:py-4
-                rounded-full bg-[#174914] text-[#FFF9B6] font-michroma text-3xl mb-8"
+          className="inline-flex items-center justify-center mt-8 px-8 py-6 md:px-8 md:py-4
+                rounded-full bg-[#174914] text-[#FFF9B6] font-michroma text-xl mb-8"
           onClick={() => {
             console.log("Quiz button clicked, sessionId:", sessionId);
             console.log(
