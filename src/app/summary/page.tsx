@@ -319,8 +319,8 @@ export default function SummaryPage() {
   return (
     <div className="flex flex-col w-full pt-6 text-amber-200">
       {/* Title */}
-      <div className="min-h-[15vh] flex justify-center items-center w-full text-center">
-        <p className="font-michroma lg:text-5xl text-3xl font-bold">
+      <div className="min-h-[20vh] flex justify-center items-center w-full text-center mt-10">
+        <p className="font-michroma lg:text-4xl text-2xl font-bold">
           Today&apos;s Summary
         </p>
       </div>
@@ -337,7 +337,7 @@ export default function SummaryPage() {
       {/* Summary of today*/}
       <div className="w-full max-w-[80%] md:max-w-[70%] mx-auto px-6 md:px-10">
         <div className="text-left space-y-5">
-          <p className="font-michroma text-2xl md:text-3xl font-bold">
+          <p className="font-michroma lg:text-2xl text-xl font-bold">
             What you have built:
           </p>
 
@@ -349,7 +349,7 @@ export default function SummaryPage() {
             </ul>
           </div>
           {/* Dropdown keywords*/}
-          <p className="font-michroma text-2xl md:text-3xl font-bold mt-15">
+          <p className="font-michroma lg:text-2xl text-xl font-bold mt-15">
             Knowledge Gaps:
           </p>
 
@@ -392,15 +392,15 @@ export default function SummaryPage() {
           </div>
         </div>
       </div>
-      <div className="min-h-[20vh] w-full flex flex-col items-center justify-center text-center gap-8">
-        <p className="font-michroma lg:text-4xl text-2xl font-bold mb-4">
+      <div className="min-h-[20vh] w-full flex flex-col items-center justify-center text-center gap-6 mt-5">
+        <p className="font-michroma lg:text-2xl text-xl font-bold mb-2">
           Are you ready to test your skills with a quiz?
         </p>
 
         <Link
           href="/quiz"
-          className="inline-flex items-center justify-center px-10 py-6 md:px-12 md:py-4
-               rounded-full bg-[#174914] text-[#FFF9B6] font-michroma text-3xl"
+          className="inline-flex items-center justify-center px-8 py-6 md:px-6 md:py-3
+               rounded-full bg-[#174914] text-[#FFF9B6] font-michroma text-xl mb-8"
         >
           Quiz
         </Link>
