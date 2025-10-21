@@ -68,29 +68,50 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get("sessionId");
 
-    if (!sessionId) {
-      return NextResponse.json(
-        { error: "Session ID required" },
-        { status: 400 }
-      );
-    }
+    let quizResults;
 
     if (sessionId) {
       // Get quiz results for a specific session
-      const quizResults = await prisma.quizResult.findMany({
+      quizResults = await prisma.quizResult.findMany({
         where: {
           daily_session_id: parseInt(sessionId),
           daily_session: {
             member_id: userId,
           },
         },
+        include: {
+          daily_session: {
+            select: {
+              date: true,
+            },
+          },
+        },
         orderBy: {
           completed_at: "desc",
         },
       });
-
-      return NextResponse.json({ results: quizResults });
+    } else {
+      // Get all quiz results for the user
+      quizResults = await prisma.quizResult.findMany({
+        where: {
+          daily_session: {
+            member_id: userId,
+          },
+        },
+        include: {
+          daily_session: {
+            select: {
+              date: true,
+            },
+          },
+        },
+        orderBy: {
+          completed_at: "desc",
+        },
+      });
     }
+
+    return NextResponse.json({ results: quizResults });
   } catch (error: any) {
     console.error("Error fetching quiz results:", error);
     return NextResponse.json(
