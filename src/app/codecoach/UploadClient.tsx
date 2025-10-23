@@ -96,39 +96,54 @@ export default function UploadClient() {
           </div>
         )}
 
-        <div className="flex justify-center">
-          <div className="flex items-center p-2 rounded-lg w-fit gap-2">
-            <label
-              htmlFor="file-upload"
-              className={`flex items-center justify-center relative w-114 h-14 rounded-2xl
-                bg-amber-100 text-black text-xl font-bold cursor-pointer
-                hover:from-gray-100 hover:via-gray-300 hover:to-gray-500 shadow-lg transition-all duration-200
-                ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+      <div className="flex justify-center">
+        <div className="flex items-center p-2 rounded-lg w-fit gap-3">
+          {/* Upload-knapp */}
+          <label
+            htmlFor="file-upload"
+            className={`relative inline-flex items-center
+              h-14 w-[18rem] md:w-[22rem] rounded-2xl
+              bg-amber-100 text-black border-2 border-amber-300
+              shadow-lg transition-colors duration-150
+              ${isUploading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          >
+            {/* Truncate: ellips, ingen layout-shift */}
+            <span
+              className="block w-full px-4 text-left font-bold text-base md:text-lg truncate"
+              title={selectedFile ? selectedFile.name : "Upload Your AI Prompts +"}
             >
               {selectedFile ? selectedFile.name : "Upload Your AI Prompts +"}
-              <input
-                id="file-upload"
-                type="file"
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                accept=".md,text/markdown"
-                onChange={handleFileSelect}
-                disabled={isUploading}
-              />
-            </label>
+            </span>
 
-            <button
-              onClick={handleGenerate}
-              disabled={isUploading || isGenerating || !selectedFile}
-              className={`flex items-center justify-center w-36 h-14 rounded-2xl 
-                bg-amber-100 text-black text-xl border border-amber-300 
-                font-bold cursor-pointer hover:from-gray-100 hover:via-gray-300 hover:to-gray-500 transition-all duration-200
-                ${!selectedFile || isUploading || isGenerating ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              {isGenerating ? "Generating..." : isUploading ? "Uploading..." : "Generate"}
-            </button>
-          </div>
+            <input
+              id="file-upload"
+              type="file"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              accept=".md,text/markdown"
+              onChange={handleFileSelect}
+              disabled={isUploading}
+            />
+          </label>
+
+          {/* Generate-knapp */}
+          <button
+            onClick={handleGenerate}
+            disabled={isUploading || isGenerating || !selectedFile}
+            className={`inline-flex items-center justify-center
+              h-14 w-[10.5rem] rounded-2xl
+              bg-amber-100 text-black text-lg font-bold
+              border-2 border-amber-300
+              shadow-lg
+              transition-colors duration-150
+              ${!selectedFile || isUploading || isGenerating
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:opacity-90 cursor-pointer"}`}
+          >
+            {isGenerating ? "Generating..." : isUploading ? "Uploading..." : "Generate"}
+          </button>
         </div>
       </div>
-    </div>
+        </div>
+      </div>
   );
 }
