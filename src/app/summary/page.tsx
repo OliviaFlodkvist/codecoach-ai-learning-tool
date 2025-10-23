@@ -7,6 +7,9 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
+const stripLeadingNumbers = (s: string) =>
+  s.replace(/^(\s*(?:\d+)\s*[.)]\s*)+/, "").trim();
+
 const anek = Anek_Gurmukhi({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -322,8 +325,8 @@ export default function SummaryPage() {
   return (
     <div className="flex flex-col w-full pt-6 text-amber-200">
       {/* Title */}
-      <div className="min-h-[20vh] flex justify-center items-center w-full text-center mt-10">
-        <p className="font-michroma lg:text-4xl text-2xl font-bold">
+      <div className="min-h-[15vh] flex justify-center items-center w-full text-center">
+        <p className="font-michroma lg:text-5xl text-3xl font-bold">
           Today&apos;s Summary
         </p>
       </div>
@@ -340,7 +343,6 @@ export default function SummaryPage() {
       {/* Summary of today*/}
       <div className="w-full max-w-[80%] md:max-w-[70%] mx-auto px-6 md:px-10">
         <div className="text-left space-y-5">
-
           <p className="font-michroma text-2xl md:text-xl font-bold">
             What you have built:
           </p>
@@ -367,12 +369,13 @@ export default function SummaryPage() {
                 "text-[#1CEF8D]",
               ];
               const color = colors[index] || "text-[#FF9D00]";
+              const cleanTitle = stripLeadingNumbers(gap.title);
 
               return (
                 <GapItem
                   key={index}
                   number={`${index + 1}.`}
-                  title={gap.title}
+                  title={cleanTitle}
                   titleClassName={color}
                   preview={
                     <>
@@ -402,7 +405,6 @@ export default function SummaryPage() {
         </p>
 
         <Link
-
           href={sessionId ? `/quiz?sessionId=${sessionId}` : "/quiz"}
           className="inline-flex items-center justify-center mt-8 px-8 py-6 md:px-8 md:py-4
                 rounded-full bg-[#174914] text-[#FFF9B6] font-michroma text-xl mb-8"
