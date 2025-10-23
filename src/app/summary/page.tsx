@@ -7,6 +7,9 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
+const stripLeadingNumbers = (s: string) =>
+  s.replace(/^(\s*(?:\d+)\s*[.)]\s*)+/, "").trim();
+
 const anek = Anek_Gurmukhi({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -366,12 +369,13 @@ export default function SummaryPage() {
                 "text-[#1CEF8D]",
               ];
               const color = colors[index] || "text-[#FF9D00]";
+              const cleanTitle = stripLeadingNumbers(gap.title);
 
               return (
                 <GapItem
                   key={index}
                   number={`${index + 1}.`}
-                  title={gap.title}
+                  title={cleanTitle}
                   titleClassName={color}
                   preview={
                     <>
