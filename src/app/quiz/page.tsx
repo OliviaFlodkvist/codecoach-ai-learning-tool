@@ -4,10 +4,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ProgressRing from "../components/ProgressRing";
 
+const stripPrefix = (s: string) =>
+  s.replace(/^\s*(([A-Za-z])\s*[.)]|(\d+)\s*[.)])\s*/,'').trim();
+
+
 type Question = {
   question: string;
   type: "multiple_choice";
-  options: string[]; // e.g. ["A. ...", "B. ...", "C. ..."]
+  options: string[]; // raw option text, utan "A. "/ "B. " prefix
   answer: "A" | "B" | "C";
 };
 
@@ -32,17 +36,9 @@ export default function QuizPage() {
   const sessionId = searchParams.get("sessionId");
 
   useEffect(() => {
-    console.log("Quiz page loaded with sessionId:", sessionId);
-    console.log("Current URL:", window.location.href);
     if (sessionId) {
-      console.log("SessionId found, starting quiz automatically...");
-      // Automatically start the quiz for this session
       fetchQuizData(sessionId);
     } else {
-      console.log(
-        "No sessionId found, trying to get the most recent session..."
-      );
-      // Try to get the most recent session with quiz data
       fetchMostRecentSession();
     }
   }, [sessionId]);
@@ -50,22 +46,15 @@ export default function QuizPage() {
   const fetchMostRecentSession = async () => {
     try {
       const response = await fetch("/api/sessions");
-      if (!response.ok) {
-        throw new Error("Failed to fetch sessions");
-      }
+      if (!response.ok) throw new Error("Failed to fetch sessions");
       const sessions = await response.json();
-
       if (sessions.length > 0) {
-        // Use the most recent session (first in the list since it's ordered by createdAt desc)
         const mostRecentSession = sessions[0];
-        console.log("Using most recent session:", mostRecentSession.id);
         fetchQuizData(mostRecentSession.id.toString());
       } else {
-        console.log("No sessions found, showing session selection...");
         fetchAvailableSessions();
       }
-    } catch (error) {
-      console.error("Error fetching most recent session:", error);
+    } catch {
       fetchAvailableSessions();
     }
   };
@@ -73,14 +62,11 @@ export default function QuizPage() {
   const fetchAvailableSessions = async () => {
     try {
       const response = await fetch("/api/sessions");
-      if (!response.ok) {
-        throw new Error("Failed to fetch available sessions");
-      }
+      if (!response.ok) throw new Error("Failed to fetch available sessions");
       const sessions = await response.json();
       setAvailableSessions(sessions);
       setLoading(false);
-    } catch (error) {
-      console.error("Error fetching sessions:", error);
+    } catch {
       setError("Failed to load available sessions");
       setLoading(false);
     }
@@ -88,17 +74,15 @@ export default function QuizPage() {
 
   const fetchQuizData = async (sessionIdToUse: string) => {
     try {
-      // Store the sessionId that we're actually using
       setCurrentSessionId(sessionIdToUse);
-      // First, check if we should skip OpenAI (same logic as summary page)
+
       const configResponse = await fetch("/api/config");
       const config = await configResponse.json();
       const shouldSkipOpenAI = config.skipOpenAI;
 
-      let data;
-
+      let data: any;
       if (shouldSkipOpenAI) {
-        // Use mock data directly - same as summary page
+       
         data = {
           quiz: [
             {
@@ -112,18 +96,13 @@ export default function QuizPage() {
               answer: "B",
             },
             {
-              question_text:
-                "Which Prisma method is used to find a unique record?",
+              question_text: "Which Prisma method is used to find a unique record?",
               options: ["findFirst", "findUnique", "findMany"],
               answer: "B",
             },
             {
               question_text: "What does bcryptjs do?",
-              options: [
-                "Validates forms",
-                "Hashes passwords securely",
-                "Creates databases",
-              ],
+              options: ["Validates forms", "Hashes passwords securely", "Creates databases"],
               answer: "B",
             },
             {
@@ -148,41 +127,23 @@ export default function QuizPage() {
           ],
         };
       } else {
-        // Fetch real data from database
-        const response = await fetch(`/api/summary?sessionId=${sessionId}`);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch quiz data");
-        }
+        const response = await fetch(`/api/summary?sessionId=${sessionIdToUse}`);
+        if (!response.ok) throw new Error("Failed to fetch quiz data");
         data = await response.json();
       }
 
-      console.log("Raw data:", data);
-      console.log("Quiz data:", data.quiz);
-
-      // Transform the data to match our quiz format
       const transformedData: QuizData = {
         quiz: data.quiz
-          ? data.quiz.map((q: any) => {
-              console.log("Processing quiz question:", q);
-              return {
-                question: q.question_text,
-                type: "multiple_choice" as const,
-                options: q.options
-                  ? q.options.map(
-                      (option: string, index: number) =>
-                        `${String.fromCharCode(65 + index)}. ${option}`
-                    )
-                  : [],
-                answer: q.answer as "A" | "B" | "C",
-              };
-            })
+          ? data.quiz.map((q: any) => ({
+              question: q.question_text,
+              type: "multiple_choice" as const,
+              options: (q.options ?? []).map((opt: string) => stripPrefix(opt)),
+              answer: q.answer as "A" | "B" | "C",
+            }))
           : [],
       };
+      
 
-      console.log("Transformed quiz data:", transformedData);
-
-      // Check if we have quiz questions
       if (transformedData.quiz.length === 0) {
         setError(
           "No quiz questions found for this session. The session might not have generated quiz questions yet."
@@ -192,8 +153,7 @@ export default function QuizPage() {
       }
 
       setQuizData(transformedData);
-    } catch (error) {
-      console.error("Error fetching quiz data:", error);
+    } catch {
       setError("Failed to load quiz data");
     } finally {
       setLoading(false);
@@ -214,11 +174,7 @@ export default function QuizPage() {
         <div className="flex flex-col gap-4">
           <div className="text-2xl">Error: {error}</div>
           <Link
-            href={
-              currentSessionId
-                ? `/summary?sessionId=${currentSessionId}`
-                : "/summary"
-            }
+            href={currentSessionId ? `/summary?sessionId=${currentSessionId}` : "/summary"}
             className="text-yellow-200 hover:text-white"
           >
             ← Back to Summary
@@ -228,11 +184,11 @@ export default function QuizPage() {
     );
   }
 
-  // Show available sessions if no sessionId provided
+  // Visa session-väljare om ingen sessionId finns
   if (!sessionId && !loading && availableSessions.length > 0) {
     return (
-      <div className="min-h-screen w-full to-black flex justify-center items-center text-center text-yellow-200 font-michroma">
-        <div className="flex flex-col gap-8">
+      <div className="min-h-screen w-full flex justify-center items-center text-center text-yellow-200 font-michroma">
+        <div className="flex flex-col gap-8 max-w-2xl px-6">
           <div className="text-6xl">QUIZ</div>
           <div className="text-xl">Select a session to take the quiz:</div>
           <div className="flex flex-col gap-4">
@@ -242,18 +198,12 @@ export default function QuizPage() {
                 href={`/quiz?sessionId=${session.id}`}
                 className="border border-yellow-200 rounded-xl bg-yellow-400/20 text-yellow-200 px-6 py-4 hover:bg-yellow-400/40 transition-colors"
               >
-                Session {session.id} -{" "}
-                {new Date(session.date).toLocaleDateString()} (
-                {session.quizCount} questions)
+                Session {session.id} – {new Date(session.date).toLocaleDateString()} ({session.quizCount} questions)
               </Link>
             ))}
           </div>
           <Link
-            href={
-              currentSessionId
-                ? `/summary?sessionId=${currentSessionId}`
-                : "/summary"
-            }
+            href={currentSessionId ? `/summary?sessionId=${currentSessionId}` : "/summary"}
             className="text-yellow-200 hover:text-white"
           >
             ← Back to Summary
@@ -265,15 +215,11 @@ export default function QuizPage() {
 
   if (!quizData) {
     return (
-      <div className="min-h-screen w-full to-black flex justify-center items-center text-center text-yellow-200 font-michroma">
+      <div className="min-h-screen w-full flex justify-center items-center text-center text-yellow-200 font-michroma">
         <div className="flex flex-col gap-4">
           <div className="text-2xl">No quiz data available</div>
           <Link
-            href={
-              currentSessionId
-                ? `/summary?sessionId=${currentSessionId}`
-                : "/summary"
-            }
+            href={currentSessionId ? `/summary?sessionId=${currentSessionId}` : "/summary"}
             className="text-yellow-200 hover:text-white"
           >
             ← Back to Summary
@@ -286,33 +232,26 @@ export default function QuizPage() {
   const q = quizData.quiz[current];
 
   const handleChoose = (idx: number) => {
-    if (selectedIdx !== null) return; // prevent changing answer
+    if (selectedIdx !== null) return; // lås svaret
     setSelectedIdx(idx);
 
-    const chosenLetter = q.options[idx][0] as "A" | "B" | "C";
+    // Räkna ut bokstav från index istället för att läsa ur texten
+    const chosenLetter = String.fromCharCode(65 + idx) as "A" | "B" | "C";
     if (chosenLetter === q.answer) setScore((s) => s + 1);
 
-    // Store user's answer
-    const newUserAnswers = [...userAnswers, chosenLetter];
-    setUserAnswers(newUserAnswers);
-
-    // Track correct answers
+    setUserAnswers((prev) => [...prev, chosenLetter]);
     if (chosenLetter === q.answer) {
-      setCorrectAnswers([...correctAnswers, current + 1]);
+      setCorrectAnswers((prev) => [...prev, current + 1]);
     }
   };
 
   const saveQuizResult = async () => {
     if (!currentSessionId || !quizData) return;
-
     try {
       const percentage = (score / quizData.quiz.length) * 100;
-
       const response = await fetch("/api/quiz-results", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId: parseInt(currentSessionId),
           score,
@@ -322,29 +261,21 @@ export default function QuizPage() {
           userAnswers,
         }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to save quiz result");
-      }
-
-      const result = await response.json();
-      console.log("Quiz result saved:", result);
-    } catch (error) {
-      console.error("Error saving quiz result:", error);
-      // Don't show error to user as this is not critical for the quiz experience
+      if (!response.ok) throw new Error();
+      await response.json();
+    } catch {
+      // ignorerar fel – påverkar inte quizflödet
     }
   };
 
   const handleNext = () => {
+    if (selectedIdx === null) return; // säkerhet
     if (current < quizData.quiz.length - 1) {
       setCurrent((c) => c + 1);
       setSelectedIdx(null);
     } else {
       setDone(true);
-      // Save the quiz result when completed
-      setTimeout(() => {
-        saveQuizResult();
-      }, 100);
+      setTimeout(saveQuizResult, 100);
     }
   };
 
@@ -358,69 +289,63 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen w-full to-black flex justify-center items-center text-center text-yellow-200 font-michroma">
-      <div className="flex flex-col gap-16">
+    <div className="min-h-screen w-full flex justify-center items-center text-yellow-200 font-michroma px-4">
+      <div className="flex flex-col gap-12 max-w-3xl w-full">
         {!done ? (
           <>
-            <div className="text-2xl">{q.question}</div>
+            {/* Frågan – smalare bredd och snygg radbrytning */}
+            <div className="text-3xl md:text-2xl leading-snug text-center mx-auto max-w-4xl text-balance">
+              {q.question}
+            </div>
 
-            <div className="flex flex-col gap-4 text-center justify-center items-center">
+            {/* Alternativ */}
+            <div className="flex flex-col gap-4 items-center">
               {q.options.map((opt, idx) => {
                 const chosen = selectedIdx === idx;
-                const isCorrect = opt[0] === q.answer;
-                const stateBg =
-                  selectedIdx === null
-                    ? "bg-yellow-200/20"
-                    : chosen
-                    ? isCorrect
-                      ? "bg-green-600"
-                      : "bg-red-600"
-                    : "bg-yellow-200/20";
+                const correctLetter = q.answer.charCodeAt(0) - 65; // 0/1/2
+                const isCorrect = idx === correctLetter;
+
+                // När något valts: visa GRÖN på rätt, RÖD på valt fel, och halvgenomskinlig på övriga
+                let stateBg = "bg-yellow-200/20";
+                if (selectedIdx !== null) {
+                  if (isCorrect) stateBg = "bg-green-600";
+                  if (chosen && !isCorrect) stateBg = "bg-red-600";
+                }
+
+                // Label ”A. ”, ”B. ”, ”C. ” renderas här – inte i datat
+                const letter = String.fromCharCode(65 + idx);
 
                 return (
                   <button
-                    key={opt}
-                    className={`border border-yellow-200 rounded-xl ${stateBg} text-yellow-100 w-124 h-16 cursor-pointer`}
+                    key={`${letter}-${opt}`}
+                    className={`border border-yellow-200 rounded-xl ${stateBg} text-yellow-100 w-full max-w-2xl px-6 py-4 text-center whitespace-normal break-words cursor-pointer`}
                     onClick={() => handleChoose(idx)}
                     disabled={selectedIdx !== null}
                   >
-                    {opt}
+                    <span className="text-lg md:text-xl">{letter}. {opt}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div className="flex flex-col gap-4 items-center">
-              <button
-                className="border border-yellow-200 rounded-xl font-semibold bg-yellow-600 text-white-400 w-64 h-12 cursor-pointer border border-yellow-300"
-                onClick={handleNext}
-              >
-                next
-              </button>
-              <Link
-                href={
-                  currentSessionId
-                    ? `/summary?sessionId=${currentSessionId}`
-                    : "/summary"
-                }
-                className="text-yellow-200 hover:text-white"
-              >
-                ← Back to Summary
-              </Link>
+            {/* Next endast när valt */}
+            <div className="flex justify-center">
+              {selectedIdx !== null && (
+                <button
+                  className="rounded-xl font-semibold bg-yellow-600 text-yellow-50 w-64 h-12 cursor-pointer border border-yellow-300"
+                  onClick={handleNext}
+                >
+                  next
+                </button>
+              )}
             </div>
           </>
         ) : (
           <>
-            <div className="font-michroma text-5xl text-[#FFF08B] mt-20">
-              RESULTS
-            </div>
-            {/* TODAYS SCORE */}
-            <div className="font-michroma text-xl text-[#FFF08B] -mt-6">
-              TODAYS SCORE
-            </div>
+            <div className="text-5xl text-[#FFF08B] mt-8 text-center">RESULTS</div>
+            <div className="text-xl text-[#FFF08B] -mt-2 text-center">TODAYS SCORE</div>
 
-            {/* Progress Ring */}
-            <div className="flex justify-center -mt-8">
+            <div className="flex justify-center">
               <ProgressRing
                 size={180}
                 strokeWidth={12}
@@ -432,21 +357,15 @@ export default function QuizPage() {
               />
             </div>
 
-            {/* Correct Answers */}
-            <div className="font-michroma text-xl text-[#FFF08B] mb-4 -mt-8">
-              Correct Answers:
-            </div>
+            <div className="text-xl text-[#FFF08B] mb-2 text-center">Correct Answers:</div>
 
-            {/* Answer indicators */}
-            <div className="flex gap-6 justify-center -mt-16">
+            <div className="flex gap-6 justify-center">
               {Array.from({ length: quizData.quiz.length }, (_, i) => {
                 const isCorrect = correctAnswers.includes(i + 1);
                 return (
                   <div
                     key={i}
-                    className={`font-michroma text-2xl font-bold ${
-                      isCorrect ? "text-[#59DD45]" : "text-[#EC4220]"
-                    }`}
+                    className={`text-2xl font-bold ${isCorrect ? "text-[#59DD45]" : "text-[#EC4220]"}`}
                   >
                     {i + 1}
                   </div>
@@ -454,19 +373,21 @@ export default function QuizPage() {
               })}
             </div>
 
-            {/* Call to action */}
-            <div className="font-michroma text-l text-[#FFF08B] text-center -mt-4">
-              Go to profile to see your learning journey
-            </div>
+            <div className="text-center text-[#FFF08B]">Go to profile to see your learning journey</div>
 
-            {/* Go to Profile button */}
-            <div className="flex justify-center -mt-8">
+            <div className="flex justify-center gap-4">
               <Link
                 href="/profile"
-                className="bg-[#174914] text-[#FFF08B] font-michroma px-10 py-3 rounded-full hover:opacity-80 transition-opacity"
+                className="bg-[#174914] text-[#FFF08B] px-8 py-3 rounded-full hover:opacity-80 transition-opacity"
               >
                 Go to Profile
               </Link>
+              <button
+                onClick={handleRestart}
+                className="border border-yellow-300 text-yellow-200 px-6 py-3 rounded-full hover:bg-yellow-400/20 transition-colors"
+              >
+                Restart
+              </button>
             </div>
           </>
         )}
