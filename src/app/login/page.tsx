@@ -2,14 +2,24 @@
 
 import Link from "next/link";
 import PrimaryButton from "../components/PrimaryButton";
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Redirect authenticated users to codecoach page
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/codecoach");
+    }
+  }, [status, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,6 +33,25 @@ export default function LoginPage() {
     setLoading(false);
     if (res?.error) setError("Invalid email or password");
     else window.location.href = "/codecoach";
+  }
+
+  // Show loading while checking authentication status
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-amber-200 text-2xl font-semibold mb-4">
+            Loading...
+          </div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-200 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the login form if user is authenticated (they'll be redirected)
+  if (status === "authenticated") {
+    return null;
   }
 
   return (
