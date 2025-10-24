@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function UploadClient() {
@@ -32,6 +32,8 @@ export default function UploadClient() {
     setIsGenerating(true);
     setUploadStatus({ type: null, message: "" });
 
+    let navigated = false; 
+
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
@@ -48,13 +50,14 @@ export default function UploadClient() {
       const generateResult = await generateResponse.json();
       if (!generateResponse.ok) throw new Error(generateResult.error || "Generation failed");
 
+      // Keep loading UI ON while navigating (prevents flash)
+      navigated = true;
+      router.push(`/summary?sessionId=${uploadResult.sessionId}`);
 
-      setTimeout(() => {
-        router.push(`/summary?sessionId=${uploadResult.sessionId}`);
-      });
-
+      // (Optional) don’t reset the input until after navigation in the next page
+      // or keep this — it won’t affect the loading lock:
       setSelectedFile(null);
-      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement | null;
       if (fileInput) fileInput.value = "";
     } catch (error) {
       setUploadStatus({
@@ -62,10 +65,44 @@ export default function UploadClient() {
         message: error instanceof Error ? error.message : "Network error. Please try again.",
       });
     } finally {
-      setIsUploading(false);
-      setIsGenerating(false);
+      // Only clear loading if we did NOT navigate (i.e., on error)
+      if (!navigated) {
+        setIsUploading(false);
+        setIsGenerating(false);
+      }
     }
+    useEffect(() => {}, []); // Fix so uploading lasts for a like a second
   };
+
+
+
+  
+  const loading = isUploading || isGenerating;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col w-full text-amber-200">
+        <div className="flex-1 flex flex-col gap-6 items-center justify-center w-full text-center px-4">
+          <p
+            aria-live="polite"
+            className="font-michroma text-xl font-bold
+                       text-transparent bg-clip-text
+                       bg-gradient-to-r from-amber-200/25 via-amber-200 to-amber-200/25
+                       [background-size:200%_100%] shimmer-text"
+          >
+            uploading file
+          </p>
+
+          <div
+            role="progressbar"
+            aria-valuetext="Uploading file..."
+            className="h-1 w-64 bg-amber-200/150 progress-indeterminate"
+          >
+            <div className="bar" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center">
