@@ -51,7 +51,6 @@ model DailySession {
   // Indexes for better query performance
   @@index([member_id])
   @@index([date])
-  @@unique([member_id, date]) // Ensure one session per member per day
 }
 
 model Keyword {

@@ -80,63 +80,10 @@ export default function QuizPage() {
       const config = await configResponse.json();
       const shouldSkipOpenAI = config.skipOpenAI;
 
-      let data: any;
-      if (shouldSkipOpenAI) {
-        data = {
-          quiz: [
-            {
-              question_text:
-                "What is the purpose of NextAuth.js in authentication?",
-              options: [
-                "Database management",
-                "Handles authentication flows and session management",
-                "CSS styling",
-              ],
-              answer: "B",
-            },
-            {
-              question_text:
-                "Which Prisma method is used to find a unique record?",
-              options: ["findFirst", "findUnique", "findMany"],
-              answer: "B",
-            },
-            {
-              question_text: "What does bcryptjs do?",
-              options: [
-                "Validates forms",
-                "Hashes passwords securely",
-                "Creates databases",
-              ],
-              answer: "B",
-            },
-            {
-              question_text:
-                "In Next.js, what is the purpose of 'use client' directive?",
-              options: [
-                "Server-side rendering",
-                "Makes a component run on the client side",
-                "Database queries",
-              ],
-              answer: "B",
-            },
-            {
-              question_text: "What is the main benefit of using TypeScript?",
-              options: [
-                "Faster execution",
-                "Type safety and better developer experience",
-                "Smaller bundle size",
-              ],
-              answer: "B",
-            },
-          ],
-        };
-      } else {
-        const response = await fetch(
-          `/api/summary?sessionId=${sessionIdToUse}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch quiz data");
-        data = await response.json();
-      }
+      // Always fetch the actual quiz data from the database
+      const response = await fetch(`/api/summary?sessionId=${sessionIdToUse}`);
+      if (!response.ok) throw new Error("Failed to fetch quiz data");
+      const data = await response.json();
 
       const transformedData: QuizData = {
         quiz: data.quiz
