@@ -154,7 +154,7 @@ const progress = trackLearning();`,
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative overflow-hidden min-h-screen"
       style={{
         backgroundImage:
           "linear-gradient(150deg, #EEA553 0%, #E37503 20%, #D85C02 45%, #901801 70%, #000000 100%)",
@@ -202,7 +202,7 @@ const progress = trackLearning();`,
         />
       </div>
 
-      <div className="flex items-center justify-center gap-10 px-6">
+      <div className="flex items-start justify-center gap-10 px-6 pt-20 pb-20">
         {/* --- Center: Main content --- */}
         <div className="text-center space-y-10">
           <h2 className="font-orbitron text-4xl md:text-5xl font-semibold text-[#FFC35B] tracking-wider ">
