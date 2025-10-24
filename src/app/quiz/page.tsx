@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ProgressRing from "../components/ProgressRing";
@@ -18,7 +18,7 @@ interface QuizData {
   quiz: Question[];
 }
 
-export default function QuizPage() {
+function QuizContent() {
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -371,5 +371,24 @@ export default function QuizPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen w-full bg-gradient-to-br from-red-900 via-orange-800 to-black flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-amber-200 text-2xl font-semibold mb-4">
+              Loading quiz...
+            </div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-200 mx-auto"></div>
+          </div>
+        </div>
+      }
+    >
+      <QuizContent />
+    </Suspense>
   );
 }
