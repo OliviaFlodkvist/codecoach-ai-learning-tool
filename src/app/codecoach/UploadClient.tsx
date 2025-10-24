@@ -48,14 +48,10 @@ export default function UploadClient() {
       const generateResult = await generateResponse.json();
       if (!generateResponse.ok) throw new Error(generateResult.error || "Generation failed");
 
-      setUploadStatus({
-        type: "success",
-        message: `Successfully generated summary, keywords, and quiz for ${uploadResult.fileName}!`,
-      });
 
       setTimeout(() => {
         router.push(`/summary?sessionId=${uploadResult.sessionId}`);
-      }, 1000);
+      });
 
       setSelectedFile(null);
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;

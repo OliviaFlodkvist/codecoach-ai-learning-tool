@@ -42,6 +42,40 @@ export default function SummaryPage() {
   const [skipOpenAI, setSkipOpenAI] = useState<boolean | null>(null);
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
+  const [loadingStage, setLoadingStage] = useState(0);
+  const [dataReady, setDataReady] = useState(false);
+  const [sequenceDone, setSequenceDone] = useState(false);
+
+  const loadingStages = [
+    "analyzing knowledge gaps",
+    "making summary",
+    "generating quiz",
+  ];
+
+  const STAGE_MS = 1200; 
+
+  useEffect(() => {
+    if (!loading) return;
+
+    setSequenceDone(false);
+    setLoadingStage(0);
+
+    const t1 = setTimeout(() => setLoadingStage(1), STAGE_MS);
+    const t2 = setTimeout(() => setLoadingStage(2), STAGE_MS * 2);
+    const t3 = setTimeout(() => setSequenceDone(true), STAGE_MS * 3);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [loading]);
+
+  useEffect(() => {
+    if (sequenceDone && dataReady) {
+      setLoading(false);
+    }
+  }, [sequenceDone, dataReady]);
 
   // Debug sessionId
   console.log("Summary page - sessionId from URL:", sessionId);
@@ -122,7 +156,7 @@ export default function SummaryPage() {
         },
         quiz: [],
       });
-      setLoading(false);
+      setDataReady(true);
     }
   }, [sessionId, skipOpenAI]);
 
@@ -295,17 +329,31 @@ export default function SummaryPage() {
       console.error("Error fetching summary data:", error);
       setError("Failed to load summary data");
     } finally {
-      setLoading(false);
+      setDataReady(true);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col w-full pt-6 text-amber-200">
-        <div className="min-h-[15vh] flex justify-center items-center w-full text-center">
-          <p className="font-michroma lg:text-5xl text-3xl font-bold">
-            Loading...
+      <div className="min-h-screen flex flex-col w-full text-red-200">
+        <div className="flex-1 flex flex-col gap-6 items-center justify-center w-full text-center px-4">
+          <p
+            aria-live="polite"
+            className="font-michroma text-xl font-bold
+             text-transparent bg-clip-text
+             bg-gradient-to-r from-amber-200/25 via-amber-200 to-amber-200/25
+             [background-size:200%_100%] shimmer-text"
+          >
+            {loadingStages[loadingStage]}
           </p>
+
+          <div
+            role="progressbar"
+            aria-valuetext={loadingStages[loadingStage]}
+            className="h-1 w-64 bg-amber-200/150 progress-indeterminate"
+          >
+            <div className="bar" />
+          </div>
         </div>
       </div>
     );
@@ -335,7 +383,7 @@ export default function SummaryPage() {
       {skipOpenAI === true && (
         <div className="mb-4 text-center">
           <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold">
-            🚧 DEVELOPMENT MODE - Using Mock Data
+            DEVELOPMENT MODE - Using Mock Data
           </span>
         </div>
       )}
