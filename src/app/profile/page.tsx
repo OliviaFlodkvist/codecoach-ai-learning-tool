@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import ProgressRing from "../components/ProgressRing";
+import LearningsChart from "../components/LearningsChart";
 import QuizRedoModal from "../components/QuizRedoModal";
 import { Michroma } from "next/font/google";
 import { useRouter } from "next/navigation";
@@ -390,6 +391,8 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* Learnings Chart Component */}
+      <LearningsChart />
       {/* Quiz Redo Modal */}
       {selectedQuiz && (
         <QuizRedoModal
