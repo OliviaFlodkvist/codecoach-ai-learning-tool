@@ -37,34 +37,15 @@ export async function POST(request: NextRequest) {
     const today = new Date();
     const dateString = today.toISOString().split("T")[0];
 
-    // Find or create today's daily session
-    let dailySession = await prisma.dailySession.findUnique({
-      where: {
-        member_id_date: {
-          member_id: userId,
-          date: new Date(dateString),
-        },
+    // Always create a new daily session for each upload
+    // This ensures each upload gets a unique session ID
+    const dailySession = await prisma.dailySession.create({
+      data: {
+        member_id: userId,
+        date: new Date(dateString),
+        raw_md_file: fileContent,
       },
     });
-
-    if (!dailySession) {
-      // Create new daily session for today
-      dailySession = await prisma.dailySession.create({
-        data: {
-          member_id: userId,
-          date: new Date(dateString),
-          raw_md_file: fileContent,
-        },
-      });
-    } else {
-      // Update existing session with new file content
-      dailySession = await prisma.dailySession.update({
-        where: { id: dailySession.id },
-        data: {
-          raw_md_file: fileContent,
-        },
-      });
-    }
 
     return NextResponse.json({
       success: true,

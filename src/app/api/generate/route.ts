@@ -299,50 +299,48 @@ Each question should:
       data = JSON.parse(response.choices[0].message?.content || "{}");
     }
 
-    // Only save to database when not skipping OpenAI
-    if (!shouldSkipOpenAI) {
-      // Clear existing data for this session first
-      await prisma.keyword.deleteMany({
-        where: { daily_session_id: sessionId },
+    // Always save to database (both OpenAI and mock data)
+    // Clear existing data for this session first
+    await prisma.keyword.deleteMany({
+      where: { daily_session_id: sessionId },
+    });
+
+    await prisma.quizQuestion.deleteMany({
+      where: { daily_session_id: sessionId },
+    });
+
+    // Save to DB - convert new structure to database format
+    const summaryText = data.summary.what_you_built.join("\n");
+    await prisma.dailySession.update({
+      where: { id: sessionId },
+      data: { summary: summaryText },
+    });
+
+    // Save knowledge gaps as keywords
+    for (let i = 0; i < data.summary.knowledge_gaps.length; i++) {
+      const gap = data.summary.knowledge_gaps[i];
+      await prisma.keyword.create({
+        data: {
+          daily_session_id: sessionId,
+          keyword: gap.title,
+          detail_text: `${gap.intro}\nGap: ${gap.gap}\nStudy: ${gap.study}\n\nConcepts:\n${gap.concepts}`,
+          order: i + 1,
+        },
       });
+    }
 
-      await prisma.quizQuestion.deleteMany({
-        where: { daily_session_id: sessionId },
+    // Save quiz questions
+    for (let i = 0; i < data.quiz.length; i++) {
+      const question = data.quiz[i];
+      await prisma.quizQuestion.create({
+        data: {
+          daily_session_id: sessionId,
+          question_text: question.question,
+          answer: question.answer,
+          options: question.options,
+          order: i + 1,
+        },
       });
-
-      // Save to DB - convert new structure to database format
-      const summaryText = data.summary.what_you_built.join("\n");
-      await prisma.dailySession.update({
-        where: { id: sessionId },
-        data: { summary: summaryText },
-      });
-
-      // Save knowledge gaps as keywords
-      for (let i = 0; i < data.summary.knowledge_gaps.length; i++) {
-        const gap = data.summary.knowledge_gaps[i];
-        await prisma.keyword.create({
-          data: {
-            daily_session_id: sessionId,
-            keyword: gap.title,
-            detail_text: `${gap.intro}\nGap: ${gap.gap}\nStudy: ${gap.study}\n\nConcepts:\n${gap.concepts}`,
-            order: i + 1,
-          },
-        });
-      }
-
-      // Save quiz questions
-      for (let i = 0; i < data.quiz.length; i++) {
-        const question = data.quiz[i];
-        await prisma.quizQuestion.create({
-          data: {
-            daily_session_id: sessionId,
-            question_text: question.question,
-            answer: question.answer,
-            options: question.options,
-            order: i + 1,
-          },
-        });
-      }
     }
 
     return NextResponse.json({ success: true, data });
