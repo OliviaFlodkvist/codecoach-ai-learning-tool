@@ -4,7 +4,7 @@ import GapItem from "@/app/components/GapItem";
 import { Anek_Gurmukhi } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 const stripLeadingNumbers = (s: string) =>
@@ -33,7 +33,7 @@ interface GeneratedData {
   }[];
 }
 
-export default function SummaryPage() {
+function SummaryContent() {
   const [generatedData, setGeneratedData] = useState<GeneratedData | null>(
     null
   );
@@ -52,7 +52,7 @@ export default function SummaryPage() {
     "generating quiz",
   ];
 
-  const STAGE_MS = 1200; 
+  const STAGE_MS = 1200;
 
   useEffect(() => {
     if (!loading) return;
@@ -468,5 +468,24 @@ export default function SummaryPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function SummaryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen w-full bg-gradient-to-br from-red-900 via-orange-800 to-black flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-amber-200 text-2xl font-semibold mb-4">
+              Loading summary...
+            </div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-200 mx-auto"></div>
+          </div>
+        </div>
+      }
+    >
+      <SummaryContent />
+    </Suspense>
   );
 }
