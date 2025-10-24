@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ProgressRing from "../components/ProgressRing";
 import LearningsChart from "../components/LearningsChart";
+import QuizRedoModal from "../components/QuizRedoModal";
 import { Michroma } from "next/font/google";
+import { useRouter } from "next/navigation";
 
 interface QuizResult {
   id: number;
@@ -11,7 +13,10 @@ interface QuizResult {
   percentage: number;
   total_questions: number;
   completed_at: string;
-  daily_session: { date: string };
+  daily_session: {
+    id: number;
+    date: string;
+  };
 }
 
 interface User {
@@ -28,6 +33,7 @@ export default function ProfilePage() {
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Popover under the button (no backdrop, toggled by the button)
   const [showOverview, setShowOverview] = useState(false);
@@ -35,6 +41,10 @@ export default function ProfilePage() {
     null
   );
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Modal state
+  const [showRedoModal, setShowRedoModal] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState<QuizResult | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -98,15 +108,7 @@ export default function ProfilePage() {
       return { label, percent: Math.round(r.percentage) };
     });
 
-  const mockQuizzes = [
-    { label: "TODAY", percent: 60 },
-    { label: "1/10", percent: 37 },
-    { label: "30/9", percent: 53 },
-    { label: "29/9", percent: 96 },
-    { label: "27/9", percent: 78 },
-  ];
-  const quizzes =
-    quizResults.length > 0 ? formatQuizData(quizResults) : mockQuizzes;
+  const quizzes = formatQuizData(quizResults);
 
   // ----- hard-coded calendar visuals (Oct 2025)
   const calendarCells: (number | null)[] = useMemo(
@@ -164,6 +166,25 @@ export default function ProfilePage() {
       : redDays.has(day)
       ? "ring-2 ring-[#EC4220]"
       : "";
+
+  const handleQuizClick = (quiz: QuizResult) => {
+    setSelectedQuiz(quiz);
+    setShowRedoModal(true);
+  };
+
+  const handleRedoConfirm = () => {
+    if (selectedQuiz) {
+      // Navigate to quiz page with the session ID
+      router.push(`/quiz?sessionId=${selectedQuiz.daily_session.id}&redo=true`);
+    }
+    setShowRedoModal(false);
+    setSelectedQuiz(null);
+  };
+
+  const handleRedoCancel = () => {
+    setShowRedoModal(false);
+    setSelectedQuiz(null);
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center text-amber-200">
@@ -242,22 +263,36 @@ export default function ProfilePage() {
               Loading quiz results...
             </p>
           </div>
+        ) : quizzes.length > 0 ? (
+          quizzes.map((q, idx) => {
+            const quizResult = quizResults[idx];
+            return (
+              <div key={idx} className="flex flex-col items-center gap-3">
+                <span className="font-michroma text-sm text-amber-200/90">
+                  {q.label}
+                </span>
+                <ProgressRing
+                  size={120}
+                  strokeWidth={12}
+                  percent={q.percent}
+                  trackColor="#E2C3A3"
+                  delayMs={1000}
+                  autoColor={true}
+                  clickable={true}
+                  onClick={() => handleQuizClick(quizResult)}
+                />
+              </div>
+            );
+          })
         ) : (
-          quizzes.map((q, idx) => (
-            <div key={idx} className="flex flex-col items-center gap-3">
-              <span className="font-michroma text-sm text-amber-200/90">
-                {q.label}
-              </span>
-              <ProgressRing
-                size={120}
-                strokeWidth={12}
-                percent={q.percent}
-                trackColor="#E2C3A3"
-                delayMs={1000}
-                autoColor={true}
-              />
-            </div>
-          ))
+          <div className="text-center">
+            <p className="font-michroma text-2xl text-amber-200/90 mb-4">
+              You haven't completed any quizzes yet
+            </p>
+            <p className="font-michroma text-lg text-amber-200/70">
+              Complete a quiz to see your progress here
+            </p>
+          </div>
         )}
       </div>
 
@@ -358,6 +393,16 @@ export default function ProfilePage() {
 
       {/* Learnings Chart Component */}
       <LearningsChart />
+      {/* Quiz Redo Modal */}
+      {selectedQuiz && (
+        <QuizRedoModal
+          isOpen={showRedoModal}
+          onClose={handleRedoCancel}
+          onConfirm={handleRedoConfirm}
+          quizDate={new Date(selectedQuiz.completed_at).toLocaleDateString()}
+          quizScore={Math.round(selectedQuiz.percentage)}
+        />
+      )}
     </div>
   );
 }
