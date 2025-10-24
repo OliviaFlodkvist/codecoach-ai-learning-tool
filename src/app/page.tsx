@@ -2,12 +2,14 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import Typed from "typed.js";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   const leftTypedRef = useRef<HTMLDivElement>(null);
   const rightTypedRef = useRef<HTMLDivElement>(null);
   const topLeftTypedRef = useRef<HTMLDivElement>(null);
   const bottomRightTypedRef = useRef<HTMLDivElement>(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
     let leftTyped: Typed | null = null;
@@ -226,7 +228,7 @@ const progress = trackLearning();`,
 
           <div>
             <Link
-              href="/login"
+              href={session ? "/codecoach" : "/login"}
               className="inline-block rounded-full bg-[#174914] px-10 py-3 text-[#FFC44D] hover:opacity-90 transition font-michroma tracking-wide"
             >
               GET STARTED
