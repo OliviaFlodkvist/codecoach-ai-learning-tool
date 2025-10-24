@@ -57,6 +57,77 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const session = (await getServerSession(authOptions as any)) as any;
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = parseInt(session.user.id);
+    const {
+      sessionId,
+      score,
+      percentage,
+      totalQuestions,
+      correctAnswers,
+      userAnswers,
+    } = await req.json();
+
+    // Verify the session belongs to the user
+    const dailySession = await prisma.dailySession.findFirst({
+      where: {
+        id: sessionId,
+        member_id: userId,
+      },
+    });
+
+    if (!dailySession) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+
+    // Find existing quiz result for this session
+    const existingResult = await prisma.quizResult.findFirst({
+      where: {
+        daily_session_id: sessionId,
+      },
+    });
+
+    if (!existingResult) {
+      return NextResponse.json(
+        { error: "Quiz result not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update the existing quiz result
+    const updatedResult = await prisma.quizResult.update({
+      where: {
+        id: existingResult.id,
+      },
+      data: {
+        score,
+        percentage,
+        total_questions: totalQuestions,
+        correct_answers: correctAnswers,
+        user_answers: userAnswers,
+        completed_at: new Date(), // Update completion time
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      result: updatedResult,
+    });
+  } catch (error: any) {
+    console.error("Error updating quiz result:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = (await getServerSession(authOptions as any)) as any;
@@ -82,6 +153,7 @@ export async function GET(req: NextRequest) {
         include: {
           daily_session: {
             select: {
+              id: true,
               date: true,
             },
           },
@@ -101,6 +173,7 @@ export async function GET(req: NextRequest) {
         include: {
           daily_session: {
             select: {
+              id: true,
               date: true,
             },
           },
