@@ -17,7 +17,6 @@ export default function Home() {
     let topLeftTyped: Typed | null = null;
     let bottomRightTyped: Typed | null = null;
 
-    // Initialize left animation if ref is available
     if (leftTypedRef.current) {
       leftTyped = new Typed(leftTypedRef.current, {
         strings: [
@@ -38,12 +37,11 @@ export default function Home() {
         backDelay: 1500,
         loop: true,
         showCursor: true,
-        cursorChar: "_",
+        cursorChar: "|",         // tecken
         autoInsertCss: true,
       });
     }
 
-    // Initialize right animation if ref is available
     if (rightTypedRef.current) {
       rightTyped = new Typed(rightTypedRef.current, {
         strings: [
@@ -69,12 +67,11 @@ const analyze = (code) => ({
         backDelay: 1800,
         loop: true,
         showCursor: true,
-        cursorChar: "|",
+        cursorChar: "_",
         autoInsertCss: true,
       });
     }
 
-    // Initialize top left animation if ref is available
     if (topLeftTypedRef.current) {
       topLeftTyped = new Typed(topLeftTypedRef.current, {
         strings: [
@@ -102,12 +99,11 @@ const Dashboard = () => {
         backDelay: 1200,
         loop: true,
         showCursor: true,
-        cursorChar: "▋",
+        cursorChar: "_",
         autoInsertCss: true,
       });
     }
 
-    // Initialize bottom right animation if ref is available
     if (bottomRightTypedRef.current) {
       bottomRightTyped = new Typed(bottomRightTypedRef.current, {
         strings: [
@@ -139,16 +135,16 @@ const progress = trackLearning();`,
         backDelay: 1400,
         loop: true,
         showCursor: true,
-        cursorChar: "█",
+        cursorChar: "|",
         autoInsertCss: true,
       });
     }
 
     return () => {
-      if (leftTyped) leftTyped.destroy();
-      if (rightTyped) rightTyped.destroy();
-      if (topLeftTyped) topLeftTyped.destroy();
-      if (bottomRightTyped) bottomRightTyped.destroy();
+      leftTyped?.destroy();
+      rightTyped?.destroy();
+      topLeftTyped?.destroy();
+      bottomRightTyped?.destroy();
     };
   }, []);
 
@@ -163,11 +159,18 @@ const progress = trackLearning();`,
         backgroundPosition: "center",
       }}
     >
+      <style jsx global>{`
+        .typed-target.tl + .typed-cursor { color: #FFC35B; }   /* top-left */
+        .typed-target.br + .typed-cursor { color: #DD7C11; }   /* bottom-right */
+        .typed-target.left + .typed-cursor { color: #DD7C11; } /* left */
+        .typed-target.right + .typed-cursor { color: #DD7C11; }/* right */
+      `}</style>
+
       {/* Top Left Animation */}
       <div className="absolute top-20 left-6 w-80 max-h-[300px] overflow-hidden">
         <div
           ref={topLeftTypedRef}
-          className="font-mono text-xs leading-relaxed text-[#FFF08B] p-4 opacity-30"
+          className="typed-target tl font-mono text-xs leading-relaxed text-[#FFF08B] p-4 opacity-30"
           style={{
             fontFamily: 'Monaco, Consolas, "Courier New", monospace',
             whiteSpace: "pre-wrap",
@@ -180,7 +183,7 @@ const progress = trackLearning();`,
       <div className="absolute bottom-6 right-6 w-80 max-h-[300px] overflow-hidden">
         <div
           ref={bottomRightTypedRef}
-          className="font-mono text-xs leading-relaxed text-[#FFF08B] p-4 opacity-30"
+          className="typed-target br font-mono text-xs leading-relaxed text-[#FFF08B] p-4 opacity-30"
           style={{
             fontFamily: 'Monaco, Consolas, "Courier New", monospace',
             whiteSpace: "pre-wrap",
@@ -189,11 +192,11 @@ const progress = trackLearning();`,
         />
       </div>
 
-      {/* Left side animation - positioned absolutely */}
+      {/* Left side animation */}
       <div className="absolute left-6 top-1/2 translate-y-16 hidden lg:block w-80 max-h-[400px] overflow-hidden">
         <div
           ref={leftTypedRef}
-          className="font-mono text-xs leading-relaxed text-[#FFF08B] p-4 opacity-30"
+          className="typed-target left font-mono text-xs leading-relaxed text-[#FFF08B] p-4 opacity-30"
           style={{
             fontFamily: 'Monaco, Consolas, "Courier New", monospace',
             whiteSpace: "pre-wrap",
@@ -210,14 +213,14 @@ const progress = trackLearning();`,
           </h2>
 
           <div className="space-y-6">
-            <div className="mx-auto w-72 md:w-[520px] border-t border-[#FFF08B]"></div>
+            <div className="mx-auto w-72 md:w-[520px] border-t border-[#FFF08B]" />
             <div className="font-orbitron text-6xl md:text-9xl font-extrabold tracking-[0.005em] text-[#FFC35B] text-stroke-yellow">
               <span>&lt;CODE/&gt;</span>
             </div>
             <div className="font-orbitron text-6xl md:text-9xl font-extrabold tracking-[0.005em] text-[#FFC35B] text-stroke-yellow">
               COACH
             </div>
-            <div className="mx-auto w-72 md:w-[520px] border-t border-[#FFF08B]"></div>
+            <div className="mx-auto w-72 md:w-[520px] border-t border-[#FFF08B]" />
           </div>
 
           <p className="font-michroma max-w-2xl mx-auto text-[#FFF08B] text-base md:text-lg leading-relaxed">
@@ -237,11 +240,11 @@ const progress = trackLearning();`,
         </div>
       </div>
 
-      {/* Right side animation - positioned absolutely */}
+      {/* Right side animation */}
       <div className="absolute right-6 top-1/2 -translate-y-16 hidden lg:block w-80 max-h-[400px] overflow-hidden">
         <div
           ref={rightTypedRef}
-          className="font-mono text-xs leading-relaxed text-[#FFF08B] p-4 opacity-30"
+          className="typed-target right font-mono text-xs leading-relaxed text-[#FFF08B] p-4 opacity-30"
           style={{
             fontFamily: 'Monaco, Consolas, "Courier New", monospace',
             whiteSpace: "pre-wrap",
