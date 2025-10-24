@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import ProgressRing from "../components/ProgressRing";
+import LearningsChart from "../components/LearningsChart";
 import { Michroma } from "next/font/google";
 
 interface QuizResult {
@@ -354,6 +355,9 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Learnings Chart Component */}
+      <LearningsChart />
     </div>
   );
 }
