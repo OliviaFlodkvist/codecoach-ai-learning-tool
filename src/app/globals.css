@@ -41,3 +41,47 @@ body {
   font-weight: 500;
   font-style: normal;
 }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.shimmer-text {
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-size: 200% 100%;
+  animation: shimmer 3.0s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-text { animation: none; }
+}
+
+/* Indeterminate loading bar */
+.progress-indeterminate {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px; 
+}
+
+.progress-indeterminate .bar {
+  position: absolute;
+  inset: 0 auto 0 0;       
+  height: 100%;
+  width: 35%;             
+  background: #fde68a;      
+  border-radius: 9999px;
+  animation: progress-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes progress-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); } 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-indeterminate .bar { animation: none; }
+}
+
