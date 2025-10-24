@@ -11,6 +11,8 @@ interface ProgressRingProps {
   delayMs?: number;
   autoColor?: boolean;
   lightText?: boolean; // if true, use lighter text style
+  onClick?: () => void; // Add click handler
+  clickable?: boolean; // Whether the ring should be clickable
 }
 
 export default function ProgressRing({
@@ -24,6 +26,8 @@ export default function ProgressRing({
   delayMs = 0,
   autoColor = false,
   lightText = false,
+  onClick,
+  clickable = false,
 }: ProgressRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -81,7 +85,13 @@ export default function ProgressRing({
   const offset = circumference - (animatedPercent / 100) * circumference;
 
   return (
-    <div style={{ width: size, height: size }} className="relative">
+    <div
+      style={{ width: size, height: size }}
+      className={`relative ${
+        clickable ? "cursor-pointer hover:scale-105 transition-transform" : ""
+      }`}
+      onClick={clickable ? onClick : undefined}
+    >
       <svg width={size} height={size}>
         <circle
           stroke={trackColor}

@@ -5,8 +5,7 @@ import Link from "next/link";
 import ProgressRing from "../components/ProgressRing";
 
 const stripPrefix = (s: string) =>
-  s.replace(/^\s*(([A-Za-z])\s*[.)]|(\d+)\s*[.)])\s*/,'').trim();
-
+  s.replace(/^\s*(([A-Za-z])\s*[.)]|(\d+)\s*[.)])\s*/, "").trim();
 
 type Question = {
   question: string;
@@ -34,6 +33,7 @@ export default function QuizPage() {
 
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
+  const isRedo = searchParams.get("redo") === "true";
 
   useEffect(() => {
     if (sessionId) {
@@ -82,7 +82,6 @@ export default function QuizPage() {
 
       let data: any;
       if (shouldSkipOpenAI) {
-       
         data = {
           quiz: [
             {
@@ -96,13 +95,18 @@ export default function QuizPage() {
               answer: "B",
             },
             {
-              question_text: "Which Prisma method is used to find a unique record?",
+              question_text:
+                "Which Prisma method is used to find a unique record?",
               options: ["findFirst", "findUnique", "findMany"],
               answer: "B",
             },
             {
               question_text: "What does bcryptjs do?",
-              options: ["Validates forms", "Hashes passwords securely", "Creates databases"],
+              options: [
+                "Validates forms",
+                "Hashes passwords securely",
+                "Creates databases",
+              ],
               answer: "B",
             },
             {
@@ -127,7 +131,9 @@ export default function QuizPage() {
           ],
         };
       } else {
-        const response = await fetch(`/api/summary?sessionId=${sessionIdToUse}`);
+        const response = await fetch(
+          `/api/summary?sessionId=${sessionIdToUse}`
+        );
         if (!response.ok) throw new Error("Failed to fetch quiz data");
         data = await response.json();
       }
@@ -142,7 +148,6 @@ export default function QuizPage() {
             }))
           : [],
       };
-      
 
       if (transformedData.quiz.length === 0) {
         setError(
@@ -174,7 +179,11 @@ export default function QuizPage() {
         <div className="flex flex-col gap-4">
           <div className="text-2xl">Error: {error}</div>
           <Link
-            href={currentSessionId ? `/summary?sessionId=${currentSessionId}` : "/summary"}
+            href={
+              currentSessionId
+                ? `/summary?sessionId=${currentSessionId}`
+                : "/summary"
+            }
             className="text-yellow-200 hover:text-white"
           >
             ← Back to Summary
@@ -198,12 +207,18 @@ export default function QuizPage() {
                 href={`/quiz?sessionId=${session.id}`}
                 className="border border-yellow-200 rounded-xl bg-yellow-400/20 text-yellow-200 px-6 py-4 hover:bg-yellow-400/40 transition-colors"
               >
-                Session {session.id} – {new Date(session.date).toLocaleDateString()} ({session.quizCount} questions)
+                Session {session.id} –{" "}
+                {new Date(session.date).toLocaleDateString()} (
+                {session.quizCount} questions)
               </Link>
             ))}
           </div>
           <Link
-            href={currentSessionId ? `/summary?sessionId=${currentSessionId}` : "/summary"}
+            href={
+              currentSessionId
+                ? `/summary?sessionId=${currentSessionId}`
+                : "/summary"
+            }
             className="text-yellow-200 hover:text-white"
           >
             ← Back to Summary
@@ -219,7 +234,11 @@ export default function QuizPage() {
         <div className="flex flex-col gap-4">
           <div className="text-2xl">No quiz data available</div>
           <Link
-            href={currentSessionId ? `/summary?sessionId=${currentSessionId}` : "/summary"}
+            href={
+              currentSessionId
+                ? `/summary?sessionId=${currentSessionId}`
+                : "/summary"
+            }
             className="text-yellow-200 hover:text-white"
           >
             ← Back to Summary
@@ -250,7 +269,7 @@ export default function QuizPage() {
     try {
       const percentage = (score / quizData.quiz.length) * 100;
       const response = await fetch("/api/quiz-results", {
-        method: "POST",
+        method: isRedo ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId: parseInt(currentSessionId),
@@ -322,7 +341,9 @@ export default function QuizPage() {
                     onClick={() => handleChoose(idx)}
                     disabled={selectedIdx !== null}
                   >
-                    <span className="text-lg md:text-xl">{letter}. {opt}</span>
+                    <span className="text-lg md:text-xl">
+                      {letter}. {opt}
+                    </span>
                   </button>
                 );
               })}
@@ -342,8 +363,12 @@ export default function QuizPage() {
           </>
         ) : (
           <>
-            <div className="text-5xl text-[#FFF08B] mt-8 text-center">RESULTS</div>
-            <div className="text-xl text-[#FFF08B] -mt-2 text-center">TODAYS SCORE</div>
+            <div className="text-5xl text-[#FFF08B] mt-8 text-center">
+              RESULTS
+            </div>
+            <div className="text-xl text-[#FFF08B] -mt-2 text-center">
+              {isRedo ? "UPDATED SCORE" : "TODAYS SCORE"}
+            </div>
 
             <div className="flex justify-center">
               <ProgressRing
@@ -357,7 +382,9 @@ export default function QuizPage() {
               />
             </div>
 
-            <div className="text-xl text-[#FFF08B] mb-2 text-center">Correct Answers:</div>
+            <div className="text-xl text-[#FFF08B] mb-2 text-center">
+              Correct Answers:
+            </div>
 
             <div className="flex gap-6 justify-center">
               {Array.from({ length: quizData.quiz.length }, (_, i) => {
@@ -365,7 +392,9 @@ export default function QuizPage() {
                 return (
                   <div
                     key={i}
-                    className={`text-2xl font-bold ${isCorrect ? "text-[#59DD45]" : "text-[#EC4220]"}`}
+                    className={`text-2xl font-bold ${
+                      isCorrect ? "text-[#59DD45]" : "text-[#EC4220]"
+                    }`}
                   >
                     {i + 1}
                   </div>
@@ -373,7 +402,9 @@ export default function QuizPage() {
               })}
             </div>
 
-            <div className="text-center text-[#FFF08B]">Go to profile to see your learning journey</div>
+            <div className="text-center text-[#FFF08B]">
+              Go to profile to see your learning journey
+            </div>
 
             <div className="flex justify-center gap-4">
               <Link
