@@ -71,7 +71,6 @@ export default function UploadClient() {
         setIsGenerating(false);
       }
     }
-    useEffect(() => {}, []); // Fix so uploading lasts for a like a second
   };
 
 
