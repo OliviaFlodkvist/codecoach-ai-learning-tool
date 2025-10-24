@@ -70,7 +70,7 @@ export default function RootLayout({
       >
         <Providers>
           <Navbar />
-          <div className="mb-35">{children}</div>
+          {children}
           <Footer />
         </Providers>
       </body>
