@@ -192,17 +192,16 @@ export default function ProfilePage() {
       <div className="mt-40 w-full max-w-3xl rounded-xl border border-amber-300/40 p-6 md:p-8 bg-black/10">
         {loading ? (
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-[#174914] flex items-center justify-center text-[#FFF08B] font-orbitron text-3xl">
-              ...
-            </div>
             <div className="space-y-2">
-              <p className="font-michroma text-xl">Loading...</p>
-              <p className="font-michroma text-base text-amber-200/90">
-                Loading...
-              </p>
-              <p className="font-michroma text-base text-amber-200/90">
-                Loading...
-              </p>
+            <p
+          aria-live="polite"
+          className="font-michroma text-xl font-bold
+           text-transparent bg-clip-text
+           bg-gradient-to-r from-amber-200/25 via-amber-200 to-amber-200/25
+           [background-size:200%_100%] shimmer-text"
+        >
+          loading profile details
+        </p>
             </div>
           </div>
         ) : user ? (
@@ -259,9 +258,23 @@ export default function ProfilePage() {
       <div className="mt-10 flex flex-wrap items-center justify-center gap-10">
         {loading ? (
           <div className="text-center">
-            <p className="font-michroma text-amber-200/90">
-              Loading quiz results...
-            </p>
+               <p
+          aria-live="polite"
+          className="font-michroma text-xl font-bold
+           text-transparent bg-clip-text
+           bg-gradient-to-r from-amber-200/25 via-amber-200 to-amber-200/25
+           [background-size:200%_100%] shimmer-text"
+        >
+          loading quiz results
+        </p>
+
+        <div
+          role="progressbar"
+          aria-valuetext="loading quiz results"
+          className="h-1 w-64 bg-amber-200/150 progress-indeterminate mt-8"
+        >
+          <div className="bar" />
+        </div>
           </div>
         ) : quizzes.length > 0 ? (
           quizzes.map((q, idx) => {

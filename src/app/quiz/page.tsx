@@ -114,10 +114,28 @@ function QuizContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex justify-center items-center text-center text-yellow-200 font-michroma">
-        <div className="text-4xl">Loading Quiz...</div>
+      <div className="min-h-screen flex flex-col w-full text-red-200">
+      <div className="flex-1 flex flex-col gap-6 items-center justify-center w-full text-center px-4">
+        <p
+          aria-live="polite"
+          className="font-michroma text-xl font-bold
+           text-transparent bg-clip-text
+           bg-gradient-to-r from-amber-200/25 via-amber-200 to-amber-200/25
+           [background-size:200%_100%] shimmer-text"
+        >
+          loading quiz
+        </p>
+
+        <div
+          role="progressbar"
+          aria-valuetext="loading quiz"
+          className="h-1 w-64 bg-amber-200/150 progress-indeterminate"
+        >
+          <div className="bar" />
+        </div>
       </div>
-    );
+    </div>
+  );
   }
 
   if (error) {
