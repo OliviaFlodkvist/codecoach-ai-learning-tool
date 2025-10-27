@@ -29,10 +29,17 @@ interface User {
   createdAt: string;
 }
 
+interface Summary {
+  id: number;
+  date: string;
+  createdAt: string;
+}
+
 export default function ProfilePage() {
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [summaries, setSummaries] = useState<Summary[]>([]);
   const router = useRouter();
 
   // Popover under the button (no backdrop, toggled by the button)
@@ -63,6 +70,15 @@ export default function ProfilePage() {
         if (quizRes.ok) {
           const quizData = await quizRes.json();
           setQuizResults(quizData.results || []);
+        }
+
+        // Fetch summaries
+        const summariesRes = await fetch("/api/summaries", {
+          credentials: "include",
+        });
+        if (summariesRes.ok) {
+          const summariesData = await summariesRes.json();
+          setSummaries(summariesData.summaries || []);
         }
       } finally {
         setLoading(false);
@@ -186,6 +202,21 @@ export default function ProfilePage() {
     setSelectedQuiz(null);
   };
 
+  const formatSummaryDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "TODAYS";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "YESTERDAY";
+    } else {
+      return `${date.getDate()}/${date.getMonth() + 1}`;
+    }
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center text-amber-200">
       {/* Profile */}
@@ -193,15 +224,15 @@ export default function ProfilePage() {
         {loading ? (
           <div className="flex items-center gap-6">
             <div className="space-y-2">
-            <p
-          aria-live="polite"
-          className="font-michroma text-xl font-bold
+              <p
+                aria-live="polite"
+                className="font-michroma text-xl font-bold
            text-transparent bg-clip-text
            bg-gradient-to-r from-amber-200/25 via-amber-200 to-amber-200/25
            [background-size:200%_100%] shimmer-text"
-        >
-          loading profile details
-        </p>
+              >
+                loading profile details
+              </p>
             </div>
           </div>
         ) : user ? (
@@ -258,23 +289,23 @@ export default function ProfilePage() {
       <div className="mt-10 flex flex-wrap items-center justify-center gap-10">
         {loading ? (
           <div className="text-center">
-               <p
-          aria-live="polite"
-          className="font-michroma text-xl font-bold
+            <p
+              aria-live="polite"
+              className="font-michroma text-xl font-bold
            text-transparent bg-clip-text
            bg-gradient-to-r from-amber-200/25 via-amber-200 to-amber-200/25
            [background-size:200%_100%] shimmer-text"
-        >
-          loading quiz results
-        </p>
+            >
+              loading quiz results
+            </p>
 
-        <div
-          role="progressbar"
-          aria-valuetext="loading quiz results"
-          className="h-1 w-64 bg-amber-200/150 progress-indeterminate mt-8"
-        >
-          <div className="bar" />
-        </div>
+            <div
+              role="progressbar"
+              aria-valuetext="loading quiz results"
+              className="h-1 w-64 bg-amber-200/150 progress-indeterminate mt-8"
+            >
+              <div className="bar" />
+            </div>
           </div>
         ) : quizzes.length > 0 ? (
           quizzes.map((q, idx) => {
@@ -403,6 +434,53 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* SUMMARIES Section */}
+      {/* Title */}
+      <div className="mt-20 text-center">
+        <p className="font-michroma text-4xl">SUMMARIES</p>
+      </div>
+
+      {/* Summary Buttons */}
+      <div className="mt-4 grid grid-cols-3 gap-7 max-w-4xl px-4">
+        {loading ? (
+          <div className="col-span-3 text-center">
+            <p
+              aria-live="polite"
+              className="font-michroma text-xl font-bold
+                 text-transparent bg-clip-text
+                 bg-gradient-to-r from-amber-200/25 via-amber-200 to-amber-200/25
+                 [background-size:200%_100%] shimmer-text"
+            >
+              loading summaries
+            </p>
+
+            <div
+              role="progressbar"
+              aria-valuetext="loading summaries"
+              className="h-1 w-64 bg-amber-200/150 progress-indeterminate mt-8 mx-auto"
+            >
+              <div className="bar" />
+            </div>
+          </div>
+        ) : summaries.length > 0 ? (
+          summaries.slice(0, 6).map((summary) => (
+            <a
+              key={summary.id}
+              href={`/summary?sessionId=${summary.id}`}
+              className="px-14 py-4 rounded-lg border border-[#FFC35B]/50 bg-transparent hover:bg-black/10 transition-colors text-[#FFC35B] font-michroma text-sm text-center"
+            >
+              {formatSummaryDate(summary.createdAt)}
+            </a>
+          ))
+        ) : (
+          <div className="col-span-3 text-center">
+            <p className="font-michroma text-lg text-amber-200/70">
+              No summaries yet
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Learnings Chart Component */}
       <LearningsChart />

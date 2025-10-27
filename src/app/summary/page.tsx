@@ -72,10 +72,13 @@ function SummaryContent() {
   }, [loading]);
 
   useEffect(() => {
-    if (sequenceDone && dataReady) {
+    // For existing summaries, skip the loading animation
+    if (sessionId && dataReady) {
+      setLoading(false);
+    } else if (dataReady) {
       setLoading(false);
     }
-  }, [sequenceDone, dataReady]);
+  }, [dataReady, sessionId]);
 
   // Debug sessionId
   console.log("Summary page - sessionId from URL:", sessionId);
