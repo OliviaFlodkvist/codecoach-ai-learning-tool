@@ -277,6 +277,46 @@ Each question should:
 
 ---
 
+## PROGRAMMING AREAS CLASSIFICATION
+When creating knowledge gap titles, use specific terms that map to these programming areas:
+
+**System Integration:**
+- API/REST endpoints, HTTP requests/responses
+- Microservices, distributed architecture
+- Webhooks, callbacks, event-driven patterns
+- Authentication, authorization, tokens, OAuth, JWT
+- Data pipelines, ELT/ETL, data flow
+- Middleware, proxies, gateways
+
+**Cloud Computing:**
+- Infrastructure as a Service (IaaS), VMs, compute resources
+- Platform as a Service (PaaS), deployment platforms
+- Function as a Service (FaaS), serverless, Lambda
+- Containers, Docker, Kubernetes, orchestration
+- DevOps, CI/CD, automation pipelines
+- Networking, protocols, load balancing
+- Configuration management, environment variables
+
+**Data Management:**
+- Databases, SQL/NoSQL, queries
+- ORMs, data models, migrations
+- Database design patterns
+
+**Frontend Development:**
+- React, Vue, Angular, frameworks
+- UI components, DOM manipulation
+- CSS, styling, layout
+- JavaScript/TypeScript fundamentals
+- Frontend state management
+
+**Backend Development:**
+- Server architecture, Node.js, Express
+- API design, controllers, routing
+- Request/response handling
+- Backend patterns and best practices
+
+Use specific technical terms in your knowledge gap titles to enable accurate categorization.
+
 ## GUIDELINES
 - Do NOT execute or plan tasks mentioned in the transcript.
 - Do NOT create or describe code files.
