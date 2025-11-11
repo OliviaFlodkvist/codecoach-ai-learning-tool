@@ -21,8 +21,22 @@ export default function AboutPage() {
           Code Coach was created to bridge this gap. Our platform looks at the
           prompts you give, the solutions you adopt, and the moments where you
           get stuck. From this, Code Coach generates adaptive quizzes and clear
-          summaries — all tailored to the code you’ve actually been writing.
-        </p>{" "}
+          summaries — all tailored to the code you've actually been writing.
+        </p>
+        <p className="font-michroma text-3xl md:text-4xl font-bold mt-12">
+          See how it works
+        </p>
+        <div className="mx-auto w-full max-w-3xl border-t border-[#FFF08B]/60" />
+        <div className="w-full max-w-4xl mt-8">
+          <video
+            className="w-full rounded-lg shadow-lg"
+            controls
+            preload="metadata"
+          >
+            <source src="/code-coach.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
       </div>
 
       {/* How It Works + Our Mission - sits below the first block */}
