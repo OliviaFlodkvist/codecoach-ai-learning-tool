@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "jest",
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start"
@@ -20,10 +21,12 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^3.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/typed.js": "^2.0.0",
+    "jest": "^30.5.2",
     "prisma": "^6.16.2",
     "tailwindcss": "^4",
     "typescript": "^5"
